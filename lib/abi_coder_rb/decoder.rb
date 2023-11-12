@@ -1,71 +1,52 @@
+require_relative "decode_tuple"
+
 module AbiCoderRb
   class Decoder
     def decode(types, data)
-      types = prepare_types(types)
-      start_positions = initialize_start_positions(types, data)
-      outputs = ::Array.new(types.size)
-
-      types.each_with_index do |type, index|
-        start_position = start_positions[index]
-
-        if type.dynamic?
-          content_length = decode_uint256(data[start_position...start_position + 32])
-          content_from = start_position + 32
-          content_to = content_from + content_length
-          content = data[content_from...content_to]
-          # outputs[index] = decode_dynamic_type(type, content)
-        else
-          content_from = start_position
-          content_to = content_from + type.size
-          content = data[content_from...content_to]
-          outputs[index] = decode_static_type(type, content)
-        end
-
-        # p  AbiCoderRb.bin_to_hex(data[content_from...content_to])
-      end
-
-      outputs
+      decode_tuple(types, data)
     end
 
     private
 
-    # Convert types to ABI::Type if they are not already
-    def prepare_types(types)
-      types.map { |type| type.is_a?(Type) ? type : Type.parse(type) }
-    end
+    def decode_type(type, data)
+      return nil if data.nil? || data.empty?
 
-    def initialize_start_positions(types, data)
-      start_positions = ::Array.new(types.size)
-      offset = 0
+      if type.is_a?(Tuple) ## todo: support empty (unit) tuple - why? why not?
+        decode_tuple(type.types, data)
+      elsif type.is_a?(FixedArray) # static-sized arrays
+        l = type.dim
+        subtype = type.subtype
+        if subtype.dynamic?
+          start_positions = (0...l).map { |i| decode_uint256(data[32 * i, 32]) }
+          start_positions.push(data.size)
 
-      types.each_with_index do |type, index|
-        if type.dynamic?
-          # 读取动态类型的偏移量
-          start_positions[index] = decode_uint256(data[offset, 32])
-          offset += 32
+          outputs = (0...l).map { |i| data[start_positions[i]...start_positions[i + 1]] }
+
+          outputs.map { |out| decode_type(subtype, out) }
         else
-          start_positions[index] = offset
-          offset += type.size
+          (0...l).map { |i| decode_type(subtype, data[subtype.size * i, subtype.size]) }
         end
+      elsif type.is_a?(Array)
+        l = decode_uint256(data[0, 32])
+        raise DecodingError, "Too long length: #{l}" if l > 100_000
+
+        subtype = type.subtype
+
+        if subtype.dynamic?
+          raise DecodingError, "Not enough data for head" unless data.size >= 32 + 32 * l
+
+          start_positions = (1..l).map { |i| 32 + decode_uint256(data[32 * i, 32]) }
+          start_positions.push(data.size)
+
+          outputs = (0...l).map { |i| data[start_positions[i]...start_positions[i + 1]] }
+
+          outputs.map { |out| decode_type(subtype, out) }
+        else
+          (0...l).map { |i| decode_type(subtype, data[32 + subtype.size * i, subtype.size]) }
+        end
+      else
+        decode_primitive_type(type, data)
       end
-
-      start_positions
-    end
-
-    def process_dynamic_type(_type, index, data, start_positions, _outputs, raise_errors)
-      pos = calculate_position(index, data, raise_errors)
-      start_positions[index] = decode_uint256(data[pos, 32])
-      check_start_position_bounds(start_positions[index], data.size, raise_errors)
-      update_previous_positions(start_positions, index)
-      # Additional processing for dynamic types
-    end
-
-    def decode_static_type(type, content)
-      raise AbiCoderRb::DecodingError, "Data out of bounds when decoding static type." if type.size > content.length
-
-      p "decode_static_type: #{type}, #{content}"
-
-      decode_primitive_type(type, content)
     end
 
     def decode_primitive_type(type, data)
@@ -78,17 +59,14 @@ module AbiCoderRb
       when Bool
         data[-1] == BYTE_ONE
       when String
-        ## note: convert to a string (with UTF_8 encoding NOT BINARY!!!)
-        size = decode_uint256(data[0, 32])
-        data[32..-1][0, size].force_encoding(Encoding::UTF_8)
+        data.force_encoding(Encoding::UTF_8)
       when Bytes
-        size = decode_uint256(data[0, 32])
-        data[32..-1][0, size]
+        data
       when FixedBytes
         data[0, type.length]
       when Address
         ## note: convert to a hex string (with UTF_8 encoding NOT BINARY!!!)
-        data[12..-1].unpack1("H*").force_encoding(Encoding::UTF_8)
+        data[12..].unpack1("H*").force_encoding(Encoding::UTF_8)
       else
         raise DecodingError, "Unknown primitive type: #{type.class.name} #{type.format}"
       end
