@@ -8,7 +8,7 @@ module AbiCoderRb
         u = decode_uint256(data[0, 32])
         u >= 2**(type.bits - 1) ? (u - 2**type.bits) : u
       when Bool
-        data[-1] == BYTE_ONE
+        data[31] == BYTE_ONE
       when String
         size = decode_uint256(data[0, 32])
         data[32...(32 + size)].force_encoding(Encoding::UTF_8)
