@@ -16,7 +16,7 @@ module AbiCoderRb
 
         outputs.map { |out| decode_type(subtype, out) }
       else
-        (0...l).map { |i| decode_type(subtype, data[32 + subtype.size * i, subtype.size]) }
+        (0...l).map { |i| decode_type(subtype, data[(32 + subtype.size * i)..]) }
       end
     end
   end
