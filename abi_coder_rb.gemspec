@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ["Aki Wu"]
   spec.email = ["wuminzhe@gmail.com"]
 
-  spec.summary = "Write a short summary, because RubyGems requires one."
-  spec.description = "Write a longer description or delete this line."
+  spec.summary = "An EVM ABI encoding and decoding tool"
+  spec.description = spec.summary
   spec.homepage = "https://github.com/wuminzhe/abi_coder_rb"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 2.6.0"
