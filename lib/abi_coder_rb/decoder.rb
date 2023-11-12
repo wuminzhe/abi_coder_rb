@@ -1,3 +1,5 @@
+require_relative "decode_type"
+require_relative "decode_types"
 require_relative "decode_tuple"
 require_relative "decode_fix_array"
 require_relative "decode_array"
@@ -9,25 +11,10 @@ module AbiCoderRb
       # Convert types to ABI::Type if they are not already
       types = types.map { |type| type.is_a?(Type) ? type : Type.parse(type) }
 
-      decode_tuple(types, data)
+      decode_types(types, data)
     end
 
     private
-
-    def decode_type(type, data)
-      return nil if data.nil? || data.empty?
-
-      case type
-      when Tuple ## todo: support empty (unit) tuple - why? why not?
-        decode_tuple(type.types, data)
-      when FixedArray # static-sized arrays
-        decode_fix_array(type, data)
-      when Array
-        decode_array(type, data)
-      else
-        decode_primitive_type(type, data)
-      end
-    end
 
     def decode_uint256(bin)
       # bin = bin.sub( /\A(\x00)+/, '' )   ## keep "performance" shortcut - why? why not?
