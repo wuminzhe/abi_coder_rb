@@ -1,15 +1,8 @@
+require "spec_helper"
+
 # https://github.com/rubycocos/blockchain/blob/feb41ee377332f88dd7dce141f86f06d18f98da1/abicoder/test/test_spec.rb
 # 1:1
 RSpec.describe AbiCoderRb do
-  let(:decoder) { AbiCoderRb::Decoder.new }
-  def hex(data)
-    AbiCoderRb.hex_to_bin(data)
-  end
-
-  def bin(data)
-    AbiCoderRb.bin_to_hex(data)
-  end
-
   it "baz" do
     types = %w[uint32 bool]
     args  = [69, true]
@@ -17,7 +10,7 @@ RSpec.describe AbiCoderRb do
     data = hex "0000000000000000000000000000000000000000000000000000000000000045" \
                "0000000000000000000000000000000000000000000000000000000000000001"
 
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 
   it "bar" do
@@ -28,7 +21,7 @@ RSpec.describe AbiCoderRb do
 
     data = hex "6162630000000000000000000000000000000000000000000000000000000000" \
                "6465660000000000000000000000000000000000000000000000000000000000"
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 
   it "sam" do
@@ -48,7 +41,7 @@ RSpec.describe AbiCoderRb do
                "0000000000000000000000000000000000000000000000000000000000000001" \
                "0000000000000000000000000000000000000000000000000000000000000002" \
                "0000000000000000000000000000000000000000000000000000000000000003"
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 
   it "f" do
@@ -69,7 +62,7 @@ RSpec.describe AbiCoderRb do
                "0000000000000000000000000000000000000000000000000000000000000789" \
                "000000000000000000000000000000000000000000000000000000000000000d" \
                "48656c6c6f2c20776f726c642100000000000000000000000000000000000000"
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 
   it "g" do
@@ -99,7 +92,7 @@ RSpec.describe AbiCoderRb do
                "74776f0000000000000000000000000000000000000000000000000000000000" \
                "0000000000000000000000000000000000000000000000000000000000000005" \
                "7468726565000000000000000000000000000000000000000000000000000000"
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 
   it "single integer" do
@@ -107,7 +100,7 @@ RSpec.describe AbiCoderRb do
     args = [98_127_491]
     data = hex "0000000000000000000000000000000000000000000000000000000005d94e83"
 
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 
   it "integer and address" do
@@ -118,7 +111,7 @@ RSpec.describe AbiCoderRb do
     ]
     data = hex "000000000000000000000000000000000000000000000000000000000004f21c" \
                "000000000000000000000000cd2a3d9f938e13cd947ec05abc7fe734df8dd826"
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 
   it "githubwiki" do
@@ -143,7 +136,7 @@ RSpec.describe AbiCoderRb do
                "0000000000000000000000000000000000000000000000000000000000000789" \
                "000000000000000000000000000000000000000000000000000000000000000d" \
                "48656c6c6f2c20776f726c642100000000000000000000000000000000000000"
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 
   it "hello" do
@@ -153,7 +146,7 @@ RSpec.describe AbiCoderRb do
                "0000000000000000000000000000000000000000000000000000000000000040" \
                "000000000000000000000000000000000000000000000000000000000000000b" \
                "48656c6c6f20576f726c64000000000000000000000000000000000000000000"
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
 
     types = ["uint256[]", "string"]
     args = [[1234, 5678], "Hello World"]
@@ -164,7 +157,7 @@ RSpec.describe AbiCoderRb do
                "000000000000000000000000000000000000000000000000000000000000162e" +
                "000000000000000000000000000000000000000000000000000000000000000b" +
                "48656c6c6f20576f726c64000000000000000000000000000000000000000000"
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 
   it "tuples" do
@@ -177,7 +170,7 @@ RSpec.describe AbiCoderRb do
                "0000000000000000000000000000000000000000000000000000000000000040" +
                "000000000000000000000000000000000000000000000000000000000000000b" +
                "48656c6c6f20576f726c64000000000000000000000000000000000000000000"
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
 
     ## reported encoding bug from eth.rb
     ##   see https://github.com/q9f/eth.rb/issues/102#
@@ -196,6 +189,6 @@ RSpec.describe AbiCoderRb do
                "000000000000000000000000000000000000000000000000000000000000002e" +
                "516d57426953453942795236767278346876726a715333534735723677453453" +
                "52713743503252567061665a5756000000000000000000000000000000000000"
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 end

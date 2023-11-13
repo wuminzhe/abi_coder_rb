@@ -1,13 +1,4 @@
 RSpec.describe AbiCoderRb do
-  let(:decoder) { AbiCoderRb::Decoder.new }
-  def hex(data)
-    AbiCoderRb.hex_to_bin(data)
-  end
-
-  def bin(data)
-    AbiCoderRb.bin_to_hex(data)
-  end
-
   it "uint256[2]" do
     types = ["uint256[2]"]
     args =  [
@@ -15,7 +6,7 @@ RSpec.describe AbiCoderRb do
     ]
     data = hex "0000000000000000000000000000000000000000000000000000000000000064" \
                "00000000000000000000000000000000000000000000000000000000000000c8"
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 
   it "uint256[]" do
@@ -27,7 +18,7 @@ RSpec.describe AbiCoderRb do
                "0000000000000000000000000000000000000000000000000000000000000002" \
                "0000000000000000000000000000000000000000000000000000000000000064" \
                "00000000000000000000000000000000000000000000000000000000000000c8"
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 
   it "single uint" do
@@ -35,7 +26,7 @@ RSpec.describe AbiCoderRb do
     args = [98_127_491]
     data = hex "0000000000000000000000000000000000000000000000000000000005d94e83"
 
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 
   it "single int" do
@@ -43,7 +34,7 @@ RSpec.describe AbiCoderRb do
     args = [-100]
     data = hex "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff9c"
 
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 
   it "single bool" do
@@ -51,7 +42,7 @@ RSpec.describe AbiCoderRb do
     args = [false]
     data = hex "0000000000000000000000000000000000000000000000000000000000000000"
 
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 
   it "single string" do
@@ -61,7 +52,7 @@ RSpec.describe AbiCoderRb do
                "000000000000000000000000000000000000000000000000000000000000000b" \
                "48656c6c6f20576f726c64000000000000000000000000000000000000000000"
 
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 
   it "single bytes" do
@@ -71,7 +62,7 @@ RSpec.describe AbiCoderRb do
                "0000000000000000000000000000000000000000000000000000000000000004" \
                "1234567800000000000000000000000000000000000000000000000000000000"
 
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 
   it "single bytes4" do
@@ -79,6 +70,6 @@ RSpec.describe AbiCoderRb do
     args = [hex("0x12345678")]
     data = hex "1234567800000000000000000000000000000000000000000000000000000000"
 
-    expect(decoder.decode(types, data)).to eq args
+    expect(decode(types, data)).to eq args
   end
 end
