@@ -18,6 +18,7 @@ RSpec.describe AbiCoderRb do
                "0000000000000000000000000000000000000000000000000000000000000002" \
                "0000000000000000000000000000000000000000000000000000000000000064" \
                "00000000000000000000000000000000000000000000000000000000000000c8"
+    expect(encode(types, args)).to eq data
     expect(decode(types, data)).to eq args
   end
 
@@ -26,6 +27,7 @@ RSpec.describe AbiCoderRb do
     args = [98_127_491]
     data = hex "0000000000000000000000000000000000000000000000000000000005d94e83"
 
+    expect(encode(types, args)).to eq data
     expect(decode(types, data)).to eq args
   end
 
@@ -34,6 +36,7 @@ RSpec.describe AbiCoderRb do
     args = [-100]
     data = hex "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff9c"
 
+    expect(encode(types, args)).to eq data
     expect(decode(types, data)).to eq args
   end
 
@@ -42,6 +45,7 @@ RSpec.describe AbiCoderRb do
     args = [false]
     data = hex "0000000000000000000000000000000000000000000000000000000000000000"
 
+    expect(encode(types, args)).to eq data
     expect(decode(types, data)).to eq args
   end
 
@@ -52,6 +56,7 @@ RSpec.describe AbiCoderRb do
                "000000000000000000000000000000000000000000000000000000000000000b" \
                "48656c6c6f20576f726c64000000000000000000000000000000000000000000"
 
+    expect(encode(types, args)).to eq data
     expect(decode(types, data)).to eq args
   end
 
@@ -62,6 +67,7 @@ RSpec.describe AbiCoderRb do
                "0000000000000000000000000000000000000000000000000000000000000004" \
                "1234567800000000000000000000000000000000000000000000000000000000"
 
+    expect(encode(types, args)).to eq data
     expect(decode(types, data)).to eq args
   end
 
@@ -70,6 +76,7 @@ RSpec.describe AbiCoderRb do
     args = [hex("0x12345678")]
     data = hex "1234567800000000000000000000000000000000000000000000000000000000"
 
+    expect(encode(types, args)).to eq data
     expect(decode(types, data)).to eq args
   end
 end
