@@ -4,7 +4,7 @@ require_relative "abi_coder_rb/version"
 
 require_relative "abi_coder_rb/parser"
 require_relative "abi_coder_rb/types"
-require_relative "abi_coder_rb/decoder"
+require_relative "abi_coder_rb/decode"
 
 module AbiCoderRb
   class DecodingError < StandardError; end
