@@ -5,9 +5,13 @@ require_relative "abi_coder_rb/version"
 require_relative "abi_coder_rb/parser"
 require_relative "abi_coder_rb/types"
 require_relative "abi_coder_rb/decode"
+require_relative "abi_coder_rb/encode"
 
 module AbiCoderRb
   class DecodingError < StandardError; end
+  class EncodingError < StandardError; end
+  class ValueError < StandardError; end
+  class ValueOutOfBounds < ValueError; end
 
   ###################
   ### some (shared) constants  (move to constants.rb or such - why? why not?)
