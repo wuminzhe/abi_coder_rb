@@ -1,5 +1,5 @@
 require_relative "decode/decode_tuple"
-require_relative "decode/decode_fix_array"
+require_relative "decode/decode_fixed_array"
 require_relative "decode/decode_array"
 require_relative "decode/decode_primitive_type"
 
@@ -20,7 +20,7 @@ module AbiCoderRb
     when Tuple ## todo: support empty (unit) tuple - why? why not?
       decode_tuple(type, data)
     when FixedArray # static-sized arrays
-      decode_fix_array(type, data)
+      decode_fixed_array(type, data)
     when Array
       decode_array(type, data)
     else

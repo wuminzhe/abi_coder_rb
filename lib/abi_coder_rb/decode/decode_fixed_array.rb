@@ -1,5 +1,5 @@
 module AbiCoderRb
-  def decode_fix_array(type, data)
+  def decode_fixed_array(type, data)
     l = type.dim
     subtype = type.subtype
     if subtype.dynamic?
