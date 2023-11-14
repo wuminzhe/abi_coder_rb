@@ -18,7 +18,34 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
 ## Usage
 
-See tests
+```ruby
+require 'abi_coder_rb'
+
+module ABI
+  extend AbiCoderRb
+end
+
+data = ABI.hex "0000000000000000000000000000000000000000000000000000000000000020" \
+               "000000000000000000000000000000000000000000000000000000000000000b" \
+               "48656c6c6f20576f726c64000000000000000000000000000000000000000000"
+result = ABI.decode(["string"], data) # => ["Hello World"]
+ABI.encode(["string"], result) == data # => true
+```
+
+```ruby
+class Hello
+  include AbiCoderRb
+
+  def world
+    data = hex "0000000000000000000000000000000000000000000000000000000000000020" \
+               "000000000000000000000000000000000000000000000000000000000000000b" \
+               "48656c6c6f20576f726c64000000000000000000000000000000000000000000"
+    decode(["string"], data)
+  end
+end
+
+Hello.new.world # => ["Hello World"]
+```
 
 ## Development
 
