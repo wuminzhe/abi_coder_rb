@@ -210,12 +210,19 @@ module AbiCoderRb
 
     def size
       s = 0
+      has_dynamic = false
       @types.each do |type|
         ts = type.size
-        return nil if ts.nil?
-
-        s += ts
+        if ts.nil?
+          # can not return nil here? if wasm
+          has_dynamic = true
+        else
+          s += ts
+        end
       end
+
+      return if has_dynamic
+
       s
     end
 

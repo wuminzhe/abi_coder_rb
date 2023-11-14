@@ -10,14 +10,14 @@ module AbiCoderRb
       data[31] == BYTE_ONE
     when String
       size = decode_uint256(data[0, 32])
-      data[32...(32 + size)].force_encoding(Encoding::UTF_8)
+      data[32...(32 + size)].encode("UTF-8")
     when Bytes
       size = decode_uint256(data[0, 32])
       data[32...(32 + size)]
     when FixedBytes
       data[0, type.length]
     when Address
-      data[12...32].unpack1("H*").force_encoding(Encoding::UTF_8)
+      bin_to_hex(data[12...32]).encode("UTF-8")
     else
       raise DecodingError, "Unknown primitive type: #{type.class.name} #{type.format}"
     end
@@ -30,6 +30,7 @@ module AbiCoderRb
     ### todo/check - allow nil - why? why not?
     ##  raise DeserializationError, "Invalid serialization (not minimal length)" if !@size && serial.size > 0 && serial[0] == BYTE_ZERO
     # bin = bin || BYTE_ZERO
-    bin.unpack1("H*").to_i(16)
+    bin_to_hex(bin).to_i(16)
+    # bin.bytes.reduce { |acc, byte| (acc << 8) + byte }
   end
 end
