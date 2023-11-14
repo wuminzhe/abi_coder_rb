@@ -6,6 +6,8 @@ for better readability code and deep learning abi codec.
 
 The most significant difference from the original code is that 'data' to decode in every decode_* function is no longer exact but now includes both the data needed for decoding and the remaining data. This change means that in the entry point('AbiCoderRb.decode'), there's no longer a need to calculate the precise data required for decoding for each type. This simplification streamlines the code.
 
+Also, some code was modified to compile to wasm. https://github.com/Shopify/ruvy
+
 ## Installation
 
 Install the gem and add to the application's Gemfile by executing:
