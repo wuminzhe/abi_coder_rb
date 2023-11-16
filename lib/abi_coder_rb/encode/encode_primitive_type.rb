@@ -53,7 +53,7 @@ module AbiCoderRb
     ## raise EncodingError or ArgumentError - why? why not?
     raise EncodingError, "Expecting string: #{arg}" unless arg.is_a?(::String)
 
-    arg = arg.b if arg.encoding != 'BINARY' ## was: name == 'UTF-8', wasm
+    arg = arg.b if arg.encoding != "BINARY" ## was: name == 'UTF-8', wasm
 
     raise ValueOutOfBounds, "Integer invalid or out of range: #{arg.size}" if arg.size > UINT_MAX
 
@@ -66,6 +66,7 @@ module AbiCoderRb
     ## raise EncodingError or ArgumentError - why? why not?
     raise EncodingError, "Expecting string: #{arg}" unless arg.is_a?(::String)
 
+    arg = hex_to_bin(arg) if hex?(arg)
     arg = arg.b if arg.encoding != Encoding::BINARY
 
     if length # fixed length type
@@ -124,7 +125,7 @@ module AbiCoderRb
     raise ArgumentError, "Integer invalid or out of range: #{n}" unless n.is_a?(Integer) && n >= 0 && n <= UINT_MAX
 
     hex = n.to_s(16)
-    hex = "0#{hex}" if hex.length % 2 != 0 # wasm, no .odd
+    hex = "0#{hex}" if hex.length.odd? # wasm, no .odd
     bin = hex_to_bin(hex)
 
     lpad(bin)

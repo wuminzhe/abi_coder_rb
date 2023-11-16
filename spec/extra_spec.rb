@@ -79,4 +79,13 @@ RSpec.describe AbiCoderRb do
     expect(encode(types, args)).to eq data
     expect(decode(types, data)).to eq args
   end
+
+  it "single bytes4 - hex" do
+    types = ["bytes4"]
+    args = ["0x12345678"]
+    data = hex "1234567800000000000000000000000000000000000000000000000000000000"
+
+    expect(encode(types, args)).to eq data
+    expect(decode(types, data)).to eq [hex("0x12345678")]
+  end
 end
