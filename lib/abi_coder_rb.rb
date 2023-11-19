@@ -39,10 +39,8 @@ module AbiCoderRb
   def bin_to_hex(bin) # convert binary string to hex string
     bin.each_byte.map { |byte| "%02x" % byte }.join
   end
-  alias bin bin_to_hex
 
   def hex?(str)
-    str = str[2..] if %w[0x 0X].include?(str[0, 2]) ## cut-of leading 0x or 0X if present
-    str.match?(/\A\b[0-9a-fA-F]+\b\z/) && str.length.even?
+    str.start_with?("0x") && str.length.even? && str[2..].match?(/\A\b[0-9a-fA-F]+\b\z/)
   end
 end

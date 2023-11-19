@@ -4,36 +4,34 @@ require "spec_helper"
 # 1:1
 RSpec.describe AbiCoderRb do
   it "baz" do
-    types = %w[uint32 bool]
-    args  = [69, true]
-
+    type = "(uint32,bool)"
+    value = [69, true]
     data = hex "0000000000000000000000000000000000000000000000000000000000000045" \
                "0000000000000000000000000000000000000000000000000000000000000001"
 
-    expect(encode(types, args)).to eq data
-    expect(decode(types, data)).to eq args
+    expect(encode(type, value)).to eq data
+    expect(decode(type, data)).to eq value
   end
 
   it "bar" do
-    types = ["bytes3[2]"]
-    args =  [
+    type = "(bytes3[2])"
+    value = [
       ["abc".b, "def".b]
     ]
-
     data = hex "6162630000000000000000000000000000000000000000000000000000000000" \
                "6465660000000000000000000000000000000000000000000000000000000000"
-    expect(encode(types, args)).to eq data
-    expect(decode(types, data)).to eq args
+
+    expect(encode(type, value)).to eq data
+    expect(decode(type, data)).to eq value
   end
 
   it "sam" do
-    types = ["bytes", "bool", "uint256[]"]
-    args = [
+    type = "(bytes,bool,uint256[])"
+    value = [
       "dave".b,
       true,
       [1, 2, 3]
     ]
-
     data = hex "0000000000000000000000000000000000000000000000000000000000000060" \
                "0000000000000000000000000000000000000000000000000000000000000001" \
                "00000000000000000000000000000000000000000000000000000000000000a0" \
@@ -43,19 +41,19 @@ RSpec.describe AbiCoderRb do
                "0000000000000000000000000000000000000000000000000000000000000001" \
                "0000000000000000000000000000000000000000000000000000000000000002" \
                "0000000000000000000000000000000000000000000000000000000000000003"
-    expect(encode(types, args)).to eq data
-    expect(decode(types, data)).to eq args
+
+    expect(encode(type, value)).to eq data
+    expect(decode(type, data)).to eq value
   end
 
   it "f" do
-    types = ["uint256", "uint32[]", "bytes10", "bytes"]
-    args = [
+    type = "(uint256,uint32[],bytes10,bytes)"
+    value = [
       0x123,
       [0x456, 0x789],
       "1234567890".b,
       "Hello, world!".b
     ]
-
     data = hex "0000000000000000000000000000000000000000000000000000000000000123" \
                "0000000000000000000000000000000000000000000000000000000000000080" \
                "3132333435363738393000000000000000000000000000000000000000000000" \
@@ -65,17 +63,17 @@ RSpec.describe AbiCoderRb do
                "0000000000000000000000000000000000000000000000000000000000000789" \
                "000000000000000000000000000000000000000000000000000000000000000d" \
                "48656c6c6f2c20776f726c642100000000000000000000000000000000000000"
-    expect(encode(types, args)).to eq data
-    expect(decode(types, data)).to eq args
+
+    expect(encode(type, value)).to eq data
+    expect(decode(type, data)).to eq value
   end
 
   it "g" do
-    types = ["uint256[][]", "string[]"]
-    args =  [
+    type = "(uint256[][],string[])"
+    value = [
       [[1, 2], [3]],
       %w[one two three]
     ]
-
     data = hex "0000000000000000000000000000000000000000000000000000000000000040" \
                "0000000000000000000000000000000000000000000000000000000000000140" \
                "0000000000000000000000000000000000000000000000000000000000000002" \
@@ -96,39 +94,36 @@ RSpec.describe AbiCoderRb do
                "74776f0000000000000000000000000000000000000000000000000000000000" \
                "0000000000000000000000000000000000000000000000000000000000000005" \
                "7468726565000000000000000000000000000000000000000000000000000000"
-    expect(encode(types, args)).to eq data
-    expect(decode(types, data)).to eq args
+
+    expect(encode(type, value)).to eq data
+    expect(decode(type, data)).to eq value
   end
 
   it "single integer" do
-    types = ["uint256"]
-    args = [98_127_491]
+    type = "(uint256)"
+    value = [98_127_491]
     data = hex "0000000000000000000000000000000000000000000000000000000005d94e83"
 
-    expect(encode(types, args)).to eq data
-    expect(decode(types, data)).to eq args
+    expect(encode(type, value)).to eq data
+    expect(decode(type, data)).to eq value
   end
 
   it "integer and address" do
-    types = %w[uint256 address]
-    args = [
+    type = "(uint256,address)"
+    value = [
       324_124,
       "cd2a3d9f938e13cd947ec05abc7fe734df8dd826"
     ]
     data = hex "000000000000000000000000000000000000000000000000000000000004f21c" \
                "000000000000000000000000cd2a3d9f938e13cd947ec05abc7fe734df8dd826"
-    expect(encode(types, args)).to eq data
-    expect(decode(types, data)).to eq args
+
+    expect(encode(type, value)).to eq data
+    expect(decode(type, data)).to eq value
   end
 
   it "githubwiki" do
-    types = [
-      "uint256",
-      "uint32[]",
-      "bytes10",
-      "bytes"
-    ]
-    args = [
+    type = "(uint256,uint32[],bytes10,bytes)"
+    value = [
       291,
       [1110, 1929],
       "1234567890".b,
@@ -143,22 +138,23 @@ RSpec.describe AbiCoderRb do
                "0000000000000000000000000000000000000000000000000000000000000789" \
                "000000000000000000000000000000000000000000000000000000000000000d" \
                "48656c6c6f2c20776f726c642100000000000000000000000000000000000000"
-    expect(encode(types, args)).to eq data
-    expect(decode(types, data)).to eq args
+
+    expect(encode(type, value)).to eq data
+    expect(decode(type, data)).to eq value
   end
 
   it "hello" do
-    types = %w[uint256 string]
-    args = [1234, "Hello World"]
+    type = "(uint256,string)"
+    value = [1234, "Hello World"]
     data = hex "00000000000000000000000000000000000000000000000000000000000004d2" \
                "0000000000000000000000000000000000000000000000000000000000000040" \
                "000000000000000000000000000000000000000000000000000000000000000b" \
                "48656c6c6f20576f726c64000000000000000000000000000000000000000000"
-    expect(encode(types, args)).to eq data
-    expect(decode(types, data)).to eq args
+    expect(encode(type, value)).to eq data
+    expect(decode(type, data)).to eq value
 
-    types = ["uint256[]", "string"]
-    args = [[1234, 5678], "Hello World"]
+    type = "(uint256[],string)"
+    value = [[1234, 5678], "Hello World"]
     data = hex "0000000000000000000000000000000000000000000000000000000000000040" \
                "00000000000000000000000000000000000000000000000000000000000000a0" \
                "0000000000000000000000000000000000000000000000000000000000000002" \
@@ -166,27 +162,27 @@ RSpec.describe AbiCoderRb do
                "000000000000000000000000000000000000000000000000000000000000162e" \
                "000000000000000000000000000000000000000000000000000000000000000b" \
                "48656c6c6f20576f726c64000000000000000000000000000000000000000000"
-    expect(encode(types, args)).to eq data
-    expect(decode(types, data)).to eq args
+    expect(encode(type, value)).to eq data
+    expect(decode(type, data)).to eq value
   end
 
   it "tuples" do
     ## sample from ether.js abicoder docu
-    types = ["uint256", "(uint256,string)"]
-    args = [1234, [5678, "Hello World"]]
+    type = "(uint256,(uint256,string))"
+    value = [1234, [5678, "Hello World"]]
     data = hex "00000000000000000000000000000000000000000000000000000000000004d2" \
                "0000000000000000000000000000000000000000000000000000000000000040" \
                "000000000000000000000000000000000000000000000000000000000000162e" \
                "0000000000000000000000000000000000000000000000000000000000000040" \
                "000000000000000000000000000000000000000000000000000000000000000b" \
                "48656c6c6f20576f726c64000000000000000000000000000000000000000000"
-    expect(encode(types, args)).to eq data
-    expect(decode(types, data)).to eq args
+    expect(encode(type, value)).to eq data
+    expect(decode(type, data)).to eq value
 
     ## reported encoding bug from eth.rb
     ##   see https://github.com/q9f/eth.rb/issues/102#
-    types = ["uint256", "(address,uint256)[]", "string"]
-    args = [
+    type = "(uint256,(address,uint256)[],string)"
+    value = [
       66,
       [["18a475d6741215709ed6cc5f4d064732379b5a58", 1]],
       "QmWBiSE9ByR6vrx4hvrjqS3SG5r6wE4SRq7CP2RVpafZWV"
@@ -200,7 +196,7 @@ RSpec.describe AbiCoderRb do
                "000000000000000000000000000000000000000000000000000000000000002e" \
                "516d57426953453942795236767278346876726a715333534735723677453453" \
                "52713743503252567061665a5756000000000000000000000000000000000000"
-    expect(encode(types, args)).to eq data
-    expect(decode(types, data)).to eq args
+    expect(encode(type, value)).to eq data
+    expect(decode(type, data)).to eq value
   end
 end
