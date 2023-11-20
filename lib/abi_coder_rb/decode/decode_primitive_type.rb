@@ -10,14 +10,14 @@ module AbiCoderRb
       data[31] == BYTE_ONE
     when String
       size = decode_uint256(data[0, 32])
-      data[32...(32 + size)].encode("UTF-8")
+      data[32...(32 + size)].force_encoding("UTF-8")
     when Bytes
       size = decode_uint256(data[0, 32])
       data[32...(32 + size)]
     when FixedBytes
       data[0, type.length]
     when Address
-      bin_to_hex(data[12...32]).encode("UTF-8")
+      bin_to_hex(data[12...32]).force_encoding("UTF-8")
     else
       raise DecodingError, "Unknown primitive type: #{type.class.name} #{type.format}"
     end

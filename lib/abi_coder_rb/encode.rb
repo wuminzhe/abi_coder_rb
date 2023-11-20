@@ -4,7 +4,7 @@ require_relative "encode/encode_array"
 require_relative "encode/encode_primitive_type"
 
 module AbiCoderRb
-  # returns binary string (with BINARY / ASCII_8BIT encoding)
+  # returns byte array
   def encode(type, value)
     # TODO: more checks?
     raise EncodingError, "Value can not be nil" if value.nil?
