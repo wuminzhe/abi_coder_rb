@@ -27,11 +27,12 @@ module ABI
   extend AbiCoderRb
 end
 
+type = "(string)"
 data = ABI.hex "0000000000000000000000000000000000000000000000000000000000000020" \
                "000000000000000000000000000000000000000000000000000000000000000b" \
                "48656c6c6f20576f726c64000000000000000000000000000000000000000000"
-result = ABI.decode(["string"], data) # => ["Hello World"]
-ABI.encode(["string"], result) == data # => true
+result = ABI.decode(type, data) # => ["Hello World"]
+ABI.encode(type, result) == data # => true
 ```
 
 ```ruby
@@ -42,7 +43,7 @@ class Hello
     data = hex "0000000000000000000000000000000000000000000000000000000000000020" \
                "000000000000000000000000000000000000000000000000000000000000000b" \
                "48656c6c6f20576f726c64000000000000000000000000000000000000000000"
-    decode(["string"], data)
+    decode("(string)", data)
   end
 end
 

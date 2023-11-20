@@ -9,6 +9,7 @@ module AbiCoderRb
                      /x
 
       def self.parse(type)
+        type = type.strip
         if type =~ TUPLE_TYPE_RX
           types = _parse_tuple_type(::Regexp.last_match(1))
           dims = _parse_dims(::Regexp.last_match(2))
