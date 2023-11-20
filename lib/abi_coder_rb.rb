@@ -43,4 +43,10 @@ module AbiCoderRb
   def hex?(str)
     str.start_with?("0x") && str.length.even? && str[2..].match?(/\A\b[0-9a-fA-F]+\b\z/)
   end
+
+  attr_accessor :transformer_before_encode
+
+  def transform_before_encode(transformer)
+    self.transformer_before_encode = transformer
+  end
 end

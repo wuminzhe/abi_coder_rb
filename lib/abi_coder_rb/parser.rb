@@ -19,6 +19,10 @@ module AbiCoderRb
           return _parse_array_type(Tuple.new(parsed_types), dims)
         end
 
+        # uint256 => uint, 256, nil
+        # uint256[2] => uint, 256, [2]
+        # uint256[] => uint, 256, [-1]
+        # bytes => bytes, nil, []
         base, sub, dims = _parse_base_type(type)
 
         _validate_base_type(base, sub)
@@ -35,7 +39,9 @@ module AbiCoderRb
                      raise ParseError, "Unrecognized type base: #{base}"
                    end
 
-        _parse_array_type(subtype, dims)
+        result = _parse_array_type(subtype, dims)
+        result.definition = type
+        result
       end
 
       ##

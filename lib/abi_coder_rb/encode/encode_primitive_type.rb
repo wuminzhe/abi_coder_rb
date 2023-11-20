@@ -1,5 +1,6 @@
 module AbiCoderRb
   def encode_primitive_type(type, arg)
+    arg = transformer_before_encode.call(type.definition, arg) if transformer_before_encode
     # 根据类型选择相应的编码方法
     case type
     when Uint
@@ -70,7 +71,7 @@ module AbiCoderRb
     arg = arg.b if arg.encoding != Encoding::BINARY
 
     if length # fixed length type
-      raise ValueOutOfBounds, "invalid bytes length #{length}" if arg.size > length
+      raise ValueOutOfBounds, "invalid bytes length #{arg.size}, should be #{length}" if arg.size > length
       raise ValueOutOfBounds, "invalid bytes length #{length}" if length < 0 || length > 32
 
       rpad(arg)

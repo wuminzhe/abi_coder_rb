@@ -20,6 +20,8 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
 ## Usage
 
+### Way 1: extend AbiCoderRb
+
 ```ruby
 require 'abi_coder_rb'
 
@@ -27,14 +29,36 @@ module ABI
   extend AbiCoderRb
 end
 
-type = "(string)"
-data = ABI.hex "0000000000000000000000000000000000000000000000000000000000000020" \
-               "000000000000000000000000000000000000000000000000000000000000000b" \
-               "48656c6c6f20576f726c64000000000000000000000000000000000000000000"
-result = ABI.decode(type, data) # => ["Hello World"]
-ABI.encode(type, result) == data # => true
+type = "(bytes4)"
+value = ["\x124Vx"] # or ABI.hex "0x12345678"
+data = ABI.hex "1234567800000000000000000000000000000000000000000000000000000000"
+ABI.decode(type, data) == value # => true
+ABI.encode(type, value) == data # => true
 ```
 
+You can transform the value according to the type before encoding it. For example, you can convert the hex string to bytes before encoding it. Here is same example but the value for "bytes4" is a hex string. 
+```ruby
+require 'abi_coder_rb'
+
+module ABI
+  extend AbiCoderRb
+
+  transform_before_encode ->(type, value) { 
+    if type.start_with?("bytes")
+      hex(value)
+    else
+      value
+    end
+  }
+end
+
+type = "(bytes4)"
+value = ["0x12345678"]
+data = ABI.hex "1234567800000000000000000000000000000000000000000000000000000000"
+ABI.encode(type, value) == data # => true
+```
+
+### Way 2: include AbiCoderRb
 ```ruby
 class Hello
   include AbiCoderRb
