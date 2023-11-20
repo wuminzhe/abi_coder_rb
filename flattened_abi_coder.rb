@@ -1,17 +1,17 @@
 # Generated from https://github.com/wuminzhe/abi_coder_rb
 module AbiCoderRb
   def decode_array(type, data)
-    l = decode_uint256(data[0, 32])
-    raise DecodingError, "Too long length: #{l}" if l > 100_000
+    size = decode_uint256(data[0, 32])
+    raise DecodingError, "Too many elements: #{size}" if size > 100_000
     subtype = type.subtype
     if subtype.dynamic?
-      raise DecodingError, "Not enough data for head" unless data.size >= 32 + 32 * l
-      start_positions = (1..l).map { |i| 32 + decode_uint256(data[32 * i, 32]) }
+      raise DecodingError, "Not enough data for head" unless data.size >= 32 + 32 * size
+      start_positions = (1..size).map { |i| 32 + decode_uint256(data[32 * i, 32]) }
       start_positions.push(data.size)
-      outputs = (0...l).map { |i| data[start_positions[i]...start_positions[i + 1]] }
+      outputs = (0...size).map { |i| data[start_positions[i]...start_positions[i + 1]] }
       outputs.map { |out| decode_type(subtype, out) }
     else
-      (0...l).map { |i| decode_type(subtype, data[(32 + subtype.size * i)..]) }
+      (0...size).map { |i| decode_type(subtype, data[(32 + subtype.size * i)..]) }
     end
   end
 end
@@ -41,14 +41,14 @@ module AbiCoderRb
       data[31] == BYTE_ONE
     when String
       size = decode_uint256(data[0, 32])
-      data[32...(32 + size)].encode("UTF-8")
+      data[32...(32 + size)].force_encoding("UTF-8")
     when Bytes
       size = decode_uint256(data[0, 32])
       data[32...(32 + size)]
     when FixedBytes
       data[0, type.length]
     when Address
-      bin_to_hex(data[12...32]).encode("UTF-8")
+      bin_to_hex(data[12...32]).force_encoding("UTF-8")
     else
       raise DecodingError, "Unknown primitive type: #{type.class.name} #{type.format}"
     end
@@ -62,26 +62,7 @@ module AbiCoderRb
   def decode_tuple(type, data)
     decode_types(type.types, data)
   end
-end
-module AbiCoderRb
-  def decode(types, data)
-    types = types.map { |type| type.is_a?(Type) ? type : Type.parse(type) }
-    decode_types(types, data)
-  end
   private
-  def decode_type(type, data)
-    return nil if data.nil? || data.empty?
-    case type
-    when Tuple ## todo: support empty (unit) tuple - why? why not?
-      decode_tuple(type, data)
-    when FixedArray # static-sized arrays
-      decode_fixed_array(type, data)
-    when Array
-      decode_array(type, data)
-    else
-      decode_primitive_type(type, data)
-    end
-  end
   def decode_types(types, data)
     start_positions = start_positions(types, data)
     types.map.with_index do |type, index|
@@ -102,6 +83,25 @@ module AbiCoderRb
       end
     end
     start_positions
+  end
+end
+module AbiCoderRb
+  def decode(type_str, data)
+    raise DecodingError, "Empty data" if data.nil? || data.empty?
+    decode_type(Type.parse(type_str), data)
+  end
+  private
+  def decode_type(type, data)
+    case type
+    when Tuple ## todo: support empty (unit) tuple - why? why not?
+      decode_tuple(type, data)
+    when FixedArray # static-sized arrays
+      decode_fixed_array(type, data)
+    when Array
+      decode_array(type, data)
+    else
+      decode_primitive_type(type, data)
+    end
   end
 end
 module AbiCoderRb
@@ -235,22 +235,7 @@ module AbiCoderRb
   def encode_tuple(tuple, args)
     encode_types(tuple.types, args)
   end
-end
-module AbiCoderRb
-  def encode(types, args)
-    types = types.map { |type| type.is_a?(Type) ? type : Type.parse(type) }
-    encode_types(types, args)
-  end
   private
-  def encode_type(type, arg)
-    if type.is_a?(Tuple)
-      encode_tuple(type, arg)
-    elsif type.is_a?(Array) || type.is_a?(FixedArray)
-      type.dynamic? ? encode_array(type, arg) : encode_fixed_array(type, arg)
-    else
-      encode_primitive_type(type, arg)
-    end
-  end
   def encode_types(types, args)
     raise ArgumentError, "args must be an array" unless args.is_a?(::Array)
     unless args.size == types.size
@@ -272,6 +257,22 @@ module AbiCoderRb
   end
 end
 module AbiCoderRb
+  def encode(type, value)
+    raise EncodingError, "Value can not be nil" if value.nil?
+    encode_type(Type.parse(type), value)
+  end
+  private
+  def encode_type(type, value)
+    if type.is_a?(Tuple)
+      encode_tuple(type, value)
+    elsif type.is_a?(Array) || type.is_a?(FixedArray)
+      type.dynamic? ? encode_array(type, value) : encode_fixed_array(type, value)
+    else
+      encode_primitive_type(type, value)
+    end
+  end
+end
+module AbiCoderRb
   class Type
     class ParseError < StandardError; end
     class Parser
@@ -279,6 +280,7 @@ module AbiCoderRb
                        ((\[[0-9]*\])*)
                      /x
       def self.parse(type)
+        type = type.strip
         if type =~ TUPLE_TYPE_RX
           types = _parse_tuple_type(::Regexp.last_match(1))
           dims = _parse_dims(::Regexp.last_match(2))
@@ -557,9 +559,7 @@ module AbiCoderRb
   def bin_to_hex(bin) # convert binary string to hex string
     bin.each_byte.map { |byte| "%02x" % byte }.join
   end
-  alias bin bin_to_hex
   def hex?(str)
-    str = str[2..] if %w[0x 0X].include?(str[0, 2]) ## cut-of leading 0x or 0X if present
-    str.match?(/\A\b[0-9a-fA-F]+\b\z/) && str.length.even?
+    str.start_with?("0x") && str.length.even? && str[2..].match?(/\A\b[0-9a-fA-F]+\b\z/)
   end
 end
