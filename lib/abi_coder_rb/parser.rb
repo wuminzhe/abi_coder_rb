@@ -10,6 +10,7 @@ module AbiCoderRb
 
       def self.parse(type)
         type = type.strip
+
         if type =~ TUPLE_TYPE_RX
           types = _parse_tuple_type(::Regexp.last_match(1))
           dims = _parse_dims(::Regexp.last_match(2))
@@ -25,6 +26,7 @@ module AbiCoderRb
         # bytes => bytes, nil, []
         base, sub, dims = _parse_base_type(type)
 
+        sub ||= 256 if type.start_with?("uint") || type.start_with?("int") # default to 256 if no sub given
         _validate_base_type(base, sub)
 
         subtype =  case base
@@ -39,9 +41,7 @@ module AbiCoderRb
                      raise ParseError, "Unrecognized type base: #{base}"
                    end
 
-        result = _parse_array_type(subtype, dims)
-        result.definition = type
-        result
+        _parse_array_type(subtype, dims)
       end
 
       ##
@@ -103,7 +103,7 @@ module AbiCoderRb
           # NOTE: string can not have any suffix
           raise ParseError, "String cannot have suffix" if sub
         when "bytes"
-          raise ParseError, "Maximum 32 bytes for fixed-length bytes"  if sub && sub > 32
+          raise ParseError, "Maximum 32 bytes for fixed-length bytes" if sub && sub > 32
         when "uint", "int"
           raise ParseError, "Integer type must have numerical suffix"  unless sub
           raise ParseError, "Integer size out of bounds" unless sub >= 8 && sub <= 256

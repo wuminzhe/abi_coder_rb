@@ -1,10 +1,10 @@
 module ABI
   extend AbiCoderRb
 
-  transform_before_encode lambda { |type_definition, value|
+  before_encoding lambda { |format, value|
     p "--------------------------"
-    p "- #{type_definition}: #{value}"
-    if type_definition.start_with?("bytes")
+    p "- #{format}: #{value}"
+    if format.start_with?("bytes")
       hex_to_bin(value)
     else
       value
@@ -16,10 +16,10 @@ class Hello
   include AbiCoderRb
 
   def initialize
-    transform_before_encode lambda { |type_definition, value|
+    before_encoding lambda { |format, value|
       p "--------------------------"
-      p "- #{type_definition}: #{value}"
-      if type_definition.start_with?("bytes")
+      p "- #{format}: #{value}"
+      if format.start_with?("bytes")
         hex_to_bin(value)
       else
         value

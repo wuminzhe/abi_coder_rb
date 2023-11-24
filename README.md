@@ -43,7 +43,7 @@ require 'abi_coder_rb'
 module ABI
   extend AbiCoderRb
 
-  transform_before_encode ->(type, value) { 
+  before_encoding ->(type, value) { 
     if type.start_with?("bytes")
       hex(value)
     else

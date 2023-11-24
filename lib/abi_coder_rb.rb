@@ -2,6 +2,8 @@
 
 require_relative "abi_coder_rb/version"
 
+require_relative "abi_coder_rb/utils"
+
 require_relative "abi_coder_rb/parser"
 require_relative "abi_coder_rb/types"
 require_relative "abi_coder_rb/decode"
@@ -13,17 +15,10 @@ module AbiCoderRb
   class ValueError < StandardError; end
   class ValueOutOfBounds < ValueError; end
 
-  ###################
-  ### some (shared) constants  (move to constants.rb or such - why? why not?)
-
-  ## todo/check:  use auto-freeze string literals magic comment - why? why not?
-  ##
-  ## todo/fix: move  BYTE_EMPTY, BYTE_ZERO, BYTE_ONE to upstream to bytes gem
-  ##    and make "global" constants - why? why not?
-
-  ## BYTE_EMPTY = "".b.freeze
+  BYTE_EMPTY = "".b.freeze
   BYTE_ZERO  = "\x00".b.freeze
   BYTE_ONE   = "\x01".b.freeze ## note: used for encoding bool for now
+  BYTE_FF  = "\xff".b.freeze
 
   UINT_MAX = 2**256 - 1   ## same as 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
   UINT_MIN = 0
@@ -44,9 +39,13 @@ module AbiCoderRb
     str.start_with?("0x") && str.length.even? && str[2..].match?(/\A\b[0-9a-fA-F]+\b\z/)
   end
 
-  attr_accessor :transformer_before_encode
+  attr_accessor :before_encoding_action, :after_decoding_action
 
-  def transform_before_encode(transformer)
-    self.transformer_before_encode = transformer
+  def before_encoding(action)
+    self.before_encoding_action = action
+  end
+
+  def after_decoding(action)
+    self.after_decoding_action = action
   end
 end
