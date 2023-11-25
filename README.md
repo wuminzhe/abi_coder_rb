@@ -10,7 +10,7 @@ Changes compared to original code:
 1. The biggest change for readability is that the 'data' to decode in every decode_* function is no longer exact but now includes both the data needed for decoding and the remaining data. This change means that in the entry point('AbiCoderRb.decode'), there's no longer a need to calculate the precise data required for decoding for each type. This simplification streamlines the code.
 2. Fixed some encoding end decoding bugs.
 3. Use string to describe any abi type. This is for compatibility with other abi libs.
-4. Added pre- encoding  and post- decoding callbacks to facilitate transforming data before encoding and after decoding. See [1](.spec/transform_before_encode_spec.rb#L4C1-L12C4) [2](https://github.com/wuminzhe/abi_coder_rb/blob/main/spec/web3_js_abitests_spec.rb#L27C1-L49C4)
+4. Added pre- encoding  and post- decoding callbacks to facilitate transforming data before encoding and after decoding. See [1](https://github.com/wuminzhe/abi_coder_rb/blob/main/spec/transform_before_encode_spec.rb#L4C1-L12C4) [2](https://github.com/wuminzhe/abi_coder_rb/blob/main/spec/web3_js_abitests_spec.rb#L27C1-L49C4)
 5. pass all web3.js tests in [encodeDecodeParams.test.ts](https://github.com/web3/web3.js/blob/c490c1814da646a83c6a5f7fee643e35507c9344/packages/web3-eth-abi/test/unit/encodeDecodeParams.test.ts). That is about 1024 unit tests from fixture [abitestsdata.json](https://github.com/web3/web3.js/blob/c490c1814da646a83c6a5f7fee643e35507c9344/packages/web3-eth-abi/test/fixtures/abitestsdata.json).
 
 Also, some code was modified to compile to wasm. Try it online: https://wuminzhe.github.io/abi.html
