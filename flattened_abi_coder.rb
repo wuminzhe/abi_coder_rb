@@ -31,27 +31,29 @@ module AbiCoderRb
 end
 module AbiCoderRb
   def decode_primitive_type(type, data)
-    case type
-    when Uint
-      decode_uint256(data[0, 32])
-    when Int
-      u = decode_uint256(data[0, 32])
-      u >= 2**(type.bits - 1) ? (u - 2**type.bits) : u
-    when Bool
-      data[31] == BYTE_ONE
-    when String
-      size = decode_uint256(data[0, 32])
-      data[32...(32 + size)].force_encoding("UTF-8")
-    when Bytes
-      size = decode_uint256(data[0, 32])
-      data[32...(32 + size)]
-    when FixedBytes
-      data[0, type.length]
-    when Address
-      bin_to_hex(data[12...32]).force_encoding("UTF-8")
-    else
-      raise DecodingError, "Unknown primitive type: #{type.class.name} #{type.format}"
-    end
+    result =
+      case type
+      when Uint
+        decode_uint256(data[0, 32])
+      when Int
+        Utils.abi_to_int_signed(bin_to_hex(data[0, 32]), type.bits)
+      when Bool
+        data[31] == BYTE_ONE
+      when String
+        size = decode_uint256(data[0, 32])
+        data[32...(32 + size)].force_encoding("UTF-8")
+      when Bytes
+        size = decode_uint256(data[0, 32])
+        data[32...(32 + size)]
+      when FixedBytes
+        data[0, type.length]
+      when Address
+        bin_to_hex(data[12...32]).force_encoding("UTF-8")
+      else
+        raise DecodingError, "Unknown primitive type: #{type.class.name} #{type.format}"
+      end
+    result = after_decoding_action.call(type.format, result) if after_decoding_action
+    result
   end
   private
   def decode_uint256(bin)
@@ -126,11 +128,23 @@ module AbiCoderRb
   def encode_fixed_array(type, args)
     raise ArgumentError, "arg must be an array" unless args.is_a?(::Array)
     raise ArgumentError, "Wrong array size: found #{args.size}, expecting #{type.dim}" unless args.size == type.dim
-    args.map { |arg| encode_type(type.subtype, arg) }.join
+    subtype = type.subtype
+    if subtype.dynamic?
+      head = "".b
+      tail = "".b
+      args.each do |arg|
+        head += encode_uint256(32 * args.size + tail.size)
+        tail += encode_type(subtype, arg)
+      end
+      head + tail
+    else
+      args.map { |arg| encode_type(type.subtype, arg) }.join
+    end
   end
 end
 module AbiCoderRb
   def encode_primitive_type(type, arg)
+    arg = before_encoding_action.call(type.format, arg) if before_encoding_action
     case type
     when Uint
       encode_uint(arg, type.bits)
@@ -158,10 +172,9 @@ module AbiCoderRb
   def encode_uint256(arg)
     encode_uint(arg, 256)
   end
-  def encode_int(arg, bits)
+  def encode_int(arg, _bits)
     raise ArgumentError, "arg is not integer: #{arg}" unless arg.is_a?(Integer)
-    raise ValueOutOfBounds, arg unless arg >= -2**(bits - 1) && arg < 2**(bits - 1)
-    lpad_int(arg % 2**bits)
+    hex_to_bin(Utils.int_to_abi_signed_256bit(arg))
   end
   def encode_bool(arg)
     raise ArgumentError, "arg is not bool: #{arg}" unless arg.is_a?(TrueClass) || arg.is_a?(FalseClass)
@@ -177,10 +190,9 @@ module AbiCoderRb
   end
   def encode_bytes(arg, length = nil)
     raise EncodingError, "Expecting string: #{arg}" unless arg.is_a?(::String)
-    arg = hex_to_bin(arg) if hex?(arg)
     arg = arg.b if arg.encoding != Encoding::BINARY
     if length # fixed length type
-      raise ValueOutOfBounds, "invalid bytes length #{length}" if arg.size > length
+      raise ValueOutOfBounds, "invalid bytes length #{arg.size}, should be #{length}" if arg.size > length
       raise ValueOutOfBounds, "invalid bytes length #{length}" if length < 0 || length > 32
       rpad(arg)
     else # variable length type  (if length is nil)
@@ -205,6 +217,12 @@ module AbiCoderRb
     end
   end
   private
+  def int_to_eth_abi(value, bits)
+    value = 2**bits + value if value < 0
+    hex = (value % 2**bits).to_s(16)
+    hex = "0#{hex}" if hex.length.odd?
+    hex.rjust(bits / 4, "0")
+  end
   def rpad(bin, l = 32) ## note: same as builtin String#ljust !!!
     return bin if bin.size >= l
     bin + BYTE_ZERO * (l - bin.size)
@@ -217,7 +235,7 @@ module AbiCoderRb
   def lpad_int(n)
     raise ArgumentError, "Integer invalid or out of range: #{n}" unless n.is_a?(Integer) && n >= 0 && n <= UINT_MAX
     hex = n.to_s(16)
-    hex = "0#{hex}" if hex.length.odd? # wasm, no .odd
+    hex = "0#{hex}" if hex.length.odd? # wasm, no .odd?
     bin = hex_to_bin(hex)
     lpad(bin)
   end
@@ -259,14 +277,17 @@ end
 module AbiCoderRb
   def encode(type, value)
     raise EncodingError, "Value can not be nil" if value.nil?
-    encode_type(Type.parse(type), value)
+    parsed = Type.parse(type)
+    encode_type(parsed, value)
   end
   private
   def encode_type(type, value)
     if type.is_a?(Tuple)
       encode_tuple(type, value)
-    elsif type.is_a?(Array) || type.is_a?(FixedArray)
-      type.dynamic? ? encode_array(type, value) : encode_fixed_array(type, value)
+    elsif type.is_a?(Array)
+      encode_array(type, value)
+    elsif type.is_a?(FixedArray)
+      encode_fixed_array(type, value)
     else
       encode_primitive_type(type, value)
     end
@@ -288,6 +309,7 @@ module AbiCoderRb
           return _parse_array_type(Tuple.new(parsed_types), dims)
         end
         base, sub, dims = _parse_base_type(type)
+        sub ||= 256 if type.start_with?("uint") || type.start_with?("int") # default to 256 if no sub given
         _validate_base_type(base, sub)
         subtype =  case base
                    when "string"  then   String.new
@@ -333,7 +355,7 @@ module AbiCoderRb
         when "string"
           raise ParseError, "String cannot have suffix" if sub
         when "bytes"
-          raise ParseError, "Maximum 32 bytes for fixed-length bytes"  if sub && sub > 32
+          raise ParseError, "Maximum 32 bytes for fixed-length bytes" if sub && sub > 32
         when "uint", "int"
           raise ParseError, "Integer type must have numerical suffix"  unless sub
           raise ParseError, "Integer size out of bounds" unless sub >= 8 && sub <= 256
@@ -538,6 +560,79 @@ module AbiCoderRb
   end # class Tuple
 end  # module ABI
 module AbiCoderRb
+  module Utils
+    class << self
+      def hex_to_bin(hex)
+        hex = hex[2..] if %w[0x 0X].include?(hex[0, 2]) ## cut-of leading 0x or 0X if present
+        hex.scan(/../).map { |x| x.hex.chr }.join
+      end
+      def bin_to_hex(bin)
+        bin.each_byte.map { |byte| "%02x" % byte }.join
+      end
+      def hex?(str)
+        str.start_with?("0x") && str.length.even? && str[2..].match?(/\A\b[0-9a-fA-F]+\b\z/)
+      end
+      def lpad(str, sym, len)
+        return str if str.size >= len
+        sym * (len - str.size) + str
+      end
+      def zpad(str, len)
+        lpad str, BYTE_ZERO, len
+      end
+      def ffpad(str, len)
+        lpad str, BYTE_FF, len
+      end
+      def uint_to_big_endian(num, size)
+        raise "Can only serialize integers" unless num.is_a?(Integer)
+        raise "Cannot serialize negative integers" if num.negative?
+        raise "Integer too large (does not fit in #{size} bytes)" if size && num >= 256**size
+        s = if num.zero?
+              BYTE_EMPTY
+            else
+              hex = num.to_s(16)
+              hex = "0#{hex}" if hex.size.odd?
+              hex_to_bin hex
+            end
+        s = size ? "#{BYTE_ZERO * [0, size - s.size].max}#{s}" : s
+        zpad s, size
+      end
+      def int_to_abi_signed_256bit(value)
+        min = -2**255
+        max = 2**255 - 1
+        raise "Value out of range" if value < min || value > max
+        value = (1 << 256) + value if value < 0
+        hex_str = value.to_s(16)
+        hex_str.rjust(64, "0")
+      end
+      def int_to_abi_signed(value)
+        raise "Value out of range" if value < -2**31 || value > 2**31 - 1
+        hex_str = [value].pack("l>").unpack1("H*")
+        if value >= 0
+          hex_str.rjust(64, "0")
+        else
+          hex_str.rjust(64, "f")
+        end
+      end
+      def abi_to_int_signed(hex_str, bits)
+        hex_str = "0x#{hex_str}" if hex_str[0, 2] != "0x" || hex_str[0, 2] != "0X"
+        expected_length = bits / 4
+        extended_hex_str = if hex_str.length < expected_length
+                             extend_char = hex_str[0] == "f" ? "f" : "0"
+                             extend_char * (expected_length - hex_str.length) + hex_str
+                           else
+                             hex_str
+                           end
+        binary_str = extended_hex_str.to_i(16).to_s(2).rjust(bits, extended_hex_str[0])
+        if binary_str[0] == "1" # 负数
+          -((binary_str.tr("01", "10").to_i(2) + 1) & ((1 << bits) - 1))
+        else # 正数
+          binary_str.to_i(2)
+        end
+      end
+    end
+  end
+end
+module AbiCoderRb
   VERSION = "0.1.0"
 end
 module AbiCoderRb
@@ -545,8 +640,10 @@ module AbiCoderRb
   class EncodingError < StandardError; end
   class ValueError < StandardError; end
   class ValueOutOfBounds < ValueError; end
+  BYTE_EMPTY = "".b.freeze
   BYTE_ZERO  = "\x00".b.freeze
   BYTE_ONE   = "\x01".b.freeze ## note: used for encoding bool for now
+  BYTE_FF  = "\xff".b.freeze
   UINT_MAX = 2**256 - 1   ## same as 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
   UINT_MIN = 0
   INT_MAX  = 2**255 - 1   ## same as  57896044618658097711785492504343953926634992332820282019728792003956564819967
@@ -561,5 +658,12 @@ module AbiCoderRb
   end
   def hex?(str)
     str.start_with?("0x") && str.length.even? && str[2..].match?(/\A\b[0-9a-fA-F]+\b\z/)
+  end
+  attr_accessor :before_encoding_action, :after_decoding_action
+  def before_encoding(action)
+    self.before_encoding_action = action
+  end
+  def after_decoding(action)
+    self.after_decoding_action = action
   end
 end

@@ -9,7 +9,8 @@ module AbiCoderRb
     # TODO: more checks?
     raise EncodingError, "Value can not be nil" if value.nil?
 
-    encode_type(Type.parse(type), value)
+    parsed = Type.parse(type)
+    encode_type(parsed, value)
   end
 
   private
@@ -17,8 +18,10 @@ module AbiCoderRb
   def encode_type(type, value)
     if type.is_a?(Tuple)
       encode_tuple(type, value)
-    elsif type.is_a?(Array) || type.is_a?(FixedArray)
-      type.dynamic? ? encode_array(type, value) : encode_fixed_array(type, value)
+    elsif type.is_a?(Array)
+      encode_array(type, value)
+    elsif type.is_a?(FixedArray)
+      encode_fixed_array(type, value)
     else
       encode_primitive_type(type, value)
     end

@@ -1,6 +1,6 @@
 module AbiCoderRb
   def encode_primitive_type(type, arg)
-    arg = transformer_before_encode.call(type.definition, arg) if transformer_before_encode
+    arg = before_encoding_action.call(type.format, arg) if before_encoding_action
     # 根据类型选择相应的编码方法
     case type
     when Uint
@@ -35,12 +35,11 @@ module AbiCoderRb
     encode_uint(arg, 256)
   end
 
-  def encode_int(arg, bits)
+  def encode_int(arg, _bits)
     ## raise EncodingError or ArgumentError - why? why not?
     raise ArgumentError, "arg is not integer: #{arg}" unless arg.is_a?(Integer)
-    raise ValueOutOfBounds, arg unless arg >= -2**(bits - 1) && arg < 2**(bits - 1)
 
-    lpad_int(arg % 2**bits)
+    hex_to_bin(Utils.int_to_abi_signed_256bit(arg))
   end
 
   def encode_bool(arg)
@@ -67,7 +66,6 @@ module AbiCoderRb
     ## raise EncodingError or ArgumentError - why? why not?
     raise EncodingError, "Expecting string: #{arg}" unless arg.is_a?(::String)
 
-    arg = hex_to_bin(arg) if hex?(arg)
     arg = arg.b if arg.encoding != Encoding::BINARY
 
     if length # fixed length type
@@ -102,6 +100,18 @@ module AbiCoderRb
 
   private
 
+  def int_to_eth_abi(value, bits)
+    # 计算补码，如果是负数
+    value = 2**bits + value if value < 0
+
+    # 将值转换为十六进制字符串
+    hex = (value % 2**bits).to_s(16)
+    hex = "0#{hex}" if hex.length.odd?
+
+    # 确保字符串长度为16位（8个字节）
+    hex.rjust(bits / 4, "0")
+  end
+
   ###########
   #  encoding helpers / utils
   #    with "hard-coded" fill symbol as BYTE_ZERO
@@ -126,7 +136,7 @@ module AbiCoderRb
     raise ArgumentError, "Integer invalid or out of range: #{n}" unless n.is_a?(Integer) && n >= 0 && n <= UINT_MAX
 
     hex = n.to_s(16)
-    hex = "0#{hex}" if hex.length.odd? # wasm, no .odd
+    hex = "0#{hex}" if hex.length.odd? # wasm, no .odd?
     bin = hex_to_bin(hex)
 
     lpad(bin)
