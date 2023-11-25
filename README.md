@@ -4,9 +4,10 @@ modified from https://github.com/rubycocos/blockchain/blob/master/abicoder
 
 for better readability code and deep learning abi codec.
 
-Changes from the origininal code:
+Changes compared to original code:
 
-1. The 'data' to decode in every decode_* function is no longer exact but now includes both the data needed for decoding and the remaining data. This change means that in the entry point('AbiCoderRb.decode'), there's no longer a need to calculate the precise data required for decoding for each type. This simplification streamlines the code.
+0. Adjusted files structure
+1. The biggest change for readability is that the 'data' to decode in every decode_* function is no longer exact but now includes both the data needed for decoding and the remaining data. This change means that in the entry point('AbiCoderRb.decode'), there's no longer a need to calculate the precise data required for decoding for each type. This simplification streamlines the code.
 2. Fixed some encoding end decoding bugs.
 3. Use string to describe any abi type. This is for compatibility with other abi libs.
 4. Added pre- encoding  and post- decoding callbacks to facilitate transforming data before encoding and after decoding. See [test](./spec/web3_js_abitests_spec.rb)
