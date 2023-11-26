@@ -39,7 +39,7 @@ module AbiCoderRb
     ## raise EncodingError or ArgumentError - why? why not?
     raise ArgumentError, "arg is not integer: #{arg}" unless arg.is_a?(Integer)
 
-    hex_to_bin(Utils.int_to_abi_signed_256bit(arg))
+    hex_to_bin(int_to_abi_signed_256bit(arg))
   end
 
   def encode_bool(arg)
@@ -96,63 +96,5 @@ module AbiCoderRb
     else
       raise EncodingError, "Could not parse address: #{arg}"
     end
-  end
-
-  private
-
-  def int_to_eth_abi(value, bits)
-    # 计算补码，如果是负数
-    value = 2**bits + value if value < 0
-
-    # 将值转换为十六进制字符串
-    hex = (value % 2**bits).to_s(16)
-    hex = "0#{hex}" if hex.length.odd?
-
-    # 确保字符串长度为16位（8个字节）
-    hex.rjust(bits / 4, "0")
-  end
-
-  ###########
-  #  encoding helpers / utils
-  #    with "hard-coded" fill symbol as BYTE_ZERO
-
-  def rpad(bin, l = 32) ## note: same as builtin String#ljust !!!
-    # note: default l word is 32 bytes
-    return bin if bin.size >= l
-
-    bin + BYTE_ZERO * (l - bin.size)
-  end
-
-  ## rename to lpad32 or such - why? why not?
-  def lpad(bin) ## note: same as builtin String#rjust !!!
-    l = 32 # NOTE: default l word is 32 bytes
-    return bin  if bin.size >= l
-
-    BYTE_ZERO * (l - bin.size) + bin
-  end
-
-  ## rename to lpad32_int or such - why? why not?
-  def lpad_int(n)
-    raise ArgumentError, "Integer invalid or out of range: #{n}" unless n.is_a?(Integer) && n >= 0 && n <= UINT_MAX
-
-    hex = n.to_s(16)
-    hex = "0#{hex}" if hex.length.odd? # wasm, no .odd?
-    bin = hex_to_bin(hex)
-
-    lpad(bin)
-  end
-
-  ## rename to lpad32_hex or such - why? why not?
-  def lpad_hex(hex)
-    raise TypeError, "Value must be a string" unless hex.is_a?(::String)
-    raise TypeError, "Non-hexadecimal digit found" unless hex =~ /\A[0-9a-fA-F]*\z/
-
-    bin = hex_to_bin(hex)
-
-    lpad(bin)
-  end
-
-  def ceil32(x)
-    x % 32 == 0 ? x : (x + 32 - x % 32)
   end
 end
