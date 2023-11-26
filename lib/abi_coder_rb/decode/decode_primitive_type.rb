@@ -5,7 +5,7 @@ module AbiCoderRb
       when Uint
         decode_uint256(data[0, 32])
       when Int
-        Utils.abi_to_int_signed(bin_to_hex(data[0, 32]), type.bits)
+        abi_to_int_signed(bin_to_hex(data[0, 32]), type.bits)
       when Bool
         data[31] == BYTE_ONE
       when String
