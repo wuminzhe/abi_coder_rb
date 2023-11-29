@@ -9,6 +9,8 @@ require_relative "abi_coder_rb/types"
 require_relative "abi_coder_rb/decode"
 require_relative "abi_coder_rb/encode"
 
+require_relative "periphery/event_decoder"
+
 module AbiCoderRb
   class DecodingError < StandardError; end
   class EncodingError < StandardError; end
