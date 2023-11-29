@@ -154,4 +154,74 @@ RSpec.describe EventDecoder do
                }
              })
   end
+
+  it "can decode event 2" do
+    event_abi = {
+      "anonymous" => false,
+      "inputs" => [
+        {
+          "components" => [
+            {
+              "internalType" => "address",
+              "name" => "to",
+              "type" => "address"
+            },
+            {
+              "components" => [
+                {
+                  "internalType" => "string",
+                  "name" => "name",
+                  "type" => "string"
+                }
+              ],
+              "internalType" => "struct Abi.User",
+              "name" => "user",
+              "type" => "tuple"
+            }
+          ],
+          "indexed" => false,
+          "internalType" => "struct Abi.Message",
+          "name" => "message",
+          "type" => "tuple"
+        }
+      ],
+      "name" => "PrintMessage",
+      "type" => "event"
+    }
+
+    event_decoder = EventDecoder.new(event_abi)
+
+    data = "0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000005b38da6a701c568545dcfcb03fcb875f56beddc4000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000005416c696365000000000000000000000000000000000000000000000000000000"
+
+    # flatten: true, with_names: false
+    expect(event_decoder.decode_data(data)).to eq %w[0x5b38da6a701c568545dcfcb03fcb875f56beddc4 Alice]
+
+    # flatten: true, with_names: true
+    expect(event_decoder.decode_data(data, with_names: true))
+      .to eq(
+        {
+          "message.to" => "0x5b38da6a701c568545dcfcb03fcb875f56beddc4",
+          "message.user.name" => "Alice"
+        }
+      )
+
+    # flatten: false, with_names: false
+    expect(event_decoder.decode_data(data, flatten: false))
+      .to eq [
+        ["0x5b38da6a701c568545dcfcb03fcb875f56beddc4", ["Alice"]]
+      ]
+
+    # flatten: false, with_names: true
+    expect(event_decoder.decode_data(data, flatten: false, with_names: true))
+      .to eq(
+        {
+          "message" => {
+            "to" => "0x5b38da6a701c568545dcfcb03fcb875f56beddc4",
+            "user" => {
+              "name" => "Alice"
+            }
+          }
+        }
+      )
+  end
 end
