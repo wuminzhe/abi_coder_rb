@@ -37,14 +37,20 @@ class EventDecoder
     }
   end
 
-  def decode_topics(topics)
+  def decode_topics(topics, with_names: false)
     topics = topics[1..] if topics.count == @indexed_topic_inputs.count + 1 && @event_abi["anonymous"] == false
 
     raise "topics count not match" if topics.count != @indexed_topic_inputs.count
 
-    topics.each_with_index.map do |topic, i|
+    values = topics.each_with_index.map do |topic, i|
       indexed_topic_type = @indexed_topic_types[i]
       decode(indexed_topic_type, hex_to_bin(topic))
+    end
+
+    if with_names
+      combine(@indexed_topic_inputs.map { |input| input["name"].underscore }, values)
+    else
+      values
     end
   end
 

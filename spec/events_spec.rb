@@ -95,6 +95,8 @@ RSpec.describe EventDecoder do
              "0000000000000000000000000000000000000000000000000000000000000000"
 
     expect(event_decoder.decode_topics(topics)).to eq ["0x7230c950337b2a02b9ec21bcf8aa09e4933dad2cd8ec86686fe6877ee19a8896"]
+    expect(event_decoder.decode_topics(topics, with_names: true))
+      .to eq({ "msg_hash" => "0x7230c950337b2a02b9ec21bcf8aa09e4933dad2cd8ec86686fe6877ee19a8896" })
 
     # flatten: true, with_names: false
     expect(event_decoder.decode_data(data)).to eq [
