@@ -55,6 +55,8 @@ class EventDecoder
   end
 
   def decode_data(data, flatten: true, with_names: false)
+    return with_names ? {} : [] if @data_type_str == "()"
+
     data_values = decode(@data_type_str, hex_to_bin(data))
 
     case flatten
