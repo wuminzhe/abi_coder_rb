@@ -10,7 +10,8 @@ class EventDecoder
               # data_inputs
               :data_inputs, :data_type_str, :data_field_names, :data_field_names_flattened
 
-  def initialize(event_abi)
+  # flatten_sep: separator for flattening event name if it is nested
+  def initialize(event_abi, flatten_sep = ".")
     @event_abi = event_abi
     @indexed_topic_inputs, @data_inputs = event_abi["inputs"].partition { |input| input["indexed"] }
 
@@ -23,7 +24,7 @@ class EventDecoder
     @data_type_str = fields_type_str(@data_fields)
 
     @data_field_names = fields_names(@data_fields)
-    @data_field_names_flattened = fields_names_flatten(@data_fields)
+    @data_field_names_flattened = fields_names_flatten(@data_fields, sep: flatten_sep)
 
     # add after_decoding action
     after_decoding lambda { |type, value|
@@ -124,16 +125,17 @@ class EventDecoder
   #
   # returns:
   #   ["root", "message_channel", "message_index", "message_fromChainId", "message_from", "message_toChainId", "message_to", "message_gasLimit", "message_encoded"]
-  def fields_names_flatten(fields, prefix = nil)
+  def fields_names_flatten(fields, prefix: nil, sep: "_")
     fields.map do |name, type|
       name = name.underscore
       if type.is_a?(::Array)
         fields_names_flatten(
           type,
-          prefix.nil? ? name : "#{prefix}.#{name}"
+          prefix: prefix.nil? ? name : "#{prefix}#{sep}#{name}",
+          sep: sep
         )
       elsif type.is_a?(::String)
-        prefix.nil? ? name : "#{prefix}.#{name}"
+        prefix.nil? ? name : "#{prefix}#{sep}#{name}"
       end
     end.flatten
   end
