@@ -73,6 +73,28 @@ RSpec.describe EventDecoder do
 
     event_decoder = EventDecoder.new(event_abi)
 
+    expect(event_decoder.indexed_topic_fields).to eq [%w[msgHash bytes32]]
+    expect(event_decoder.data_fields).to eq [
+      %w[root bytes32],
+      [
+        "message",
+        [
+          %w[channel address], %w[index uint256], %w[fromChainId uint256], %w[from address], %w[toChainId uint256],
+          %w[to address], %w[gasLimit uint256], %w[encoded bytes]
+        ]
+      ]
+    ]
+    expect(event_decoder.data_type_str).to eq(
+      "(bytes32,(address,uint256,uint256,address,uint256,address,uint256,bytes))"
+    )
+    expect(event_decoder.data_fields_flatten(sep: ".")).to eq [
+      ["root", "bytes32"], ["message.channel", "address"],
+      ["message.index", "uint256"], ["message.from_chain_id", "uint256"],
+      ["message.from", "address"], ["message.to_chain_id", "uint256"],
+      ["message.to", "address"], ["message.gas_limit", "uint256"],
+      ["message.encoded", "bytes"]
+    ]
+
     # data
     # https://sepolia.arbiscan.io/tx/0x505ab955a67a26a3aebbb1623ff9ee571c453b70e92c6131cb82c9755993cab7#eventlog
     topics = ["0x7230c950337b2a02b9ec21bcf8aa09e4933dad2cd8ec86686fe6877ee19a8896"]

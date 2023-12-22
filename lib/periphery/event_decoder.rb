@@ -6,25 +6,21 @@ class EventDecoder
 
   attr_reader :event_abi,
               # indexed_topic_inputs
-              :indexed_topic_inputs, :indexed_topic_types,
+              :indexed_topic_inputs, :indexed_topic_fields,
               # data_inputs
-              :data_inputs, :data_type_str, :data_field_names, :data_field_names_flattened
+              :data_inputs, :data_fields, :data_type_str
 
   # flatten_sep: separator for flattening event name if it is nested
-  def initialize(event_abi, flatten_sep = ".")
+  def initialize(event_abi)
     @event_abi = event_abi
     @indexed_topic_inputs, @data_inputs = event_abi["inputs"].partition { |input| input["indexed"] }
 
     # indexed_topic_inputs:
-    @indexed_topic_types = @indexed_topic_inputs.map { |input| input["type"] }
+    @indexed_topic_fields = fields_of(@indexed_topic_inputs)
 
     # data_inputs:
     @data_fields = fields_of(@data_inputs)
-
     @data_type_str = fields_type_str(@data_fields)
-
-    @data_field_names = fields_names(@data_fields)
-    @data_field_names_flattened = fields_names_flatten(@data_fields, sep: flatten_sep)
 
     # add after_decoding action
     after_decoding lambda { |type, value|
@@ -38,13 +34,19 @@ class EventDecoder
     }
   end
 
+  def data_fields_flatten(sep: ".")
+    flat_fields(@data_fields, sep: sep)
+  end
+
   def decode_topics(topics, with_names: false)
     topics = topics[1..] if topics.count == @indexed_topic_inputs.count + 1 && @event_abi["anonymous"] == false
 
     raise "topics count not match" if topics.count != @indexed_topic_inputs.count
 
+    indexed_topic_types = @indexed_topic_inputs.map { |input| input["type"] }
+
     values = topics.each_with_index.map do |topic, i|
-      indexed_topic_type = @indexed_topic_types[i]
+      indexed_topic_type = indexed_topic_types[i]
       decode(indexed_topic_type, hex_to_bin(topic))
     end
 
@@ -55,7 +57,7 @@ class EventDecoder
     end
   end
 
-  def decode_data(data, flatten: true, with_names: false)
+  def decode_data(data, flatten: true, sep: ".", with_names: false)
     return with_names ? {} : [] if @data_type_str == "()"
 
     data_values = decode(@data_type_str, hex_to_bin(data))
@@ -63,13 +65,13 @@ class EventDecoder
     case flatten
     when true
       if with_names
-        combine(@data_field_names_flattened, data_values.flatten)
+        combine(data_field_names(flatten: true, sep: sep), data_values.flatten)
       else
         data_values.flatten
       end
     when false
       if with_names
-        combine(@data_field_names, data_values)
+        combine(data_field_names, data_values)
       else
         data_values
       end
@@ -77,6 +79,23 @@ class EventDecoder
   end
 
   private
+
+  # returns:
+  #   [
+  #     ["root", "bytes32"],
+  #     ["message", [["channel", "address"], ["index", "uint256"], ["fromChainId", "uint256"], ["from", "address"], ["toChainId", "uint256"], ["to", "address"], ["encoded", "bytes"]]]
+  #   ]
+  def fields_of(inputs)
+    inputs.map do |input|
+      if input["type"] == "tuple"
+        [input["name"], fields_of(input["components"])]
+      elsif input["type"] == "enum"
+        [input["name"], "uint8"]
+      else
+        [input["name"], input["type"]]
+      end
+    end
+  end
 
   # fields:
   #   [
@@ -103,7 +122,27 @@ class EventDecoder
   #     ["root", "bytes32"],
   #     ["message", [["channel", "address"], ["index", "uint256"], ["fromChainId", "uint256"], ["from", "address"], ["toChainId", "uint256"], ["to", "address"], ["encoded", "bytes"]]]
   #   ]
-  #
+  # returns:
+  #   [["root", "bytes32"], ["message.channel", "address"], ["message.index", "uint256"], ["message.from_chain_id", "uint256"], ["message.from", "address"], ["message.to_chain_id", "uint256"], ["message.to", "address"], ["message.gas_limit", "uint256"], ["message.encoded", "bytes"]]
+
+  def flat_fields(fields, sep: ".")
+    fields.map do |name, type|
+      name = name.underscore
+      if type.is_a?(::Array)
+        flat_fields(type, sep: sep).map do |n, t|
+          ["#{name}#{sep}#{n}", t]
+        end
+      else
+        [[name, type]]
+      end
+    end.flatten(1)
+  end
+
+  # fields:
+  #   [
+  #     ["root", "bytes32"],
+  #     ["message", [["channel", "address"], ["index", "uint256"], ["fromChainId", "uint256"], ["from", "address"], ["toChainId", "uint256"], ["to", "address"], ["encoded", "bytes"]]]
+  #   ]
   # returns:
   #   ["root", {"message" => ["channel", "index", "fromChainId", "from", "toChainId", "to", "gasLimit", "encoded"]}
   def fields_names(fields)
@@ -125,7 +164,7 @@ class EventDecoder
   #
   # returns:
   #   ["root", "message_channel", "message_index", "message_fromChainId", "message_from", "message_toChainId", "message_to", "message_gasLimit", "message_encoded"]
-  def fields_names_flatten(fields, prefix: nil, sep: "_")
+  def fields_names_flatten(fields, prefix: nil, sep: ".")
     fields.map do |name, type|
       name = name.underscore
       if type.is_a?(::Array)
@@ -140,20 +179,11 @@ class EventDecoder
     end.flatten
   end
 
-  # returns:
-  #   [
-  #     ["root", "bytes32"],
-  #     ["message", [["channel", "address"], ["index", "uint256"], ["fromChainId", "uint256"], ["from", "address"], ["toChainId", "uint256"], ["to", "address"], ["encoded", "bytes"]]]
-  #   ]
-  def fields_of(inputs)
-    inputs.map do |input|
-      if input["type"] == "tuple"
-        [input["name"], fields_of(input["components"])]
-      elsif input["type"] == "enum"
-        [input["name"], "uint8"]
-      else
-        [input["name"], input["type"]]
-      end
+  def data_field_names(flatten: false, sep: ".")
+    if flatten
+      fields_names_flatten(@data_fields, sep: sep)
+    else
+      fields_names(@data_fields)
     end
   end
 
