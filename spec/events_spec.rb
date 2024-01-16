@@ -73,14 +73,14 @@ RSpec.describe EventDecoder do
 
     event_decoder = EventDecoder.new(event_abi)
 
-    expect(event_decoder.indexed_topic_fields).to eq [%w[msgHash bytes32]]
+    expect(event_decoder.indexed_topic_fields).to eq [%w[msg_hash bytes32]]
     expect(event_decoder.data_fields).to eq [
       %w[root bytes32],
       [
         "message",
         [
-          %w[channel address], %w[index uint256], %w[fromChainId uint256], %w[from address], %w[toChainId uint256],
-          %w[to address], %w[gasLimit uint256], %w[encoded bytes]
+          %w[channel address], %w[index uint256], %w[from_chain_id uint256], %w[from address], %w[to_chain_id uint256],
+          %w[to address], %w[gas_limit uint256], %w[encoded bytes]
         ]
       ]
     ]
