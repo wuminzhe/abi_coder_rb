@@ -88,11 +88,11 @@ class EventDecoder
   def fields_of(inputs)
     inputs.map do |input|
       if input["type"] == "tuple"
-        [input["name"], fields_of(input["components"])]
+        [input["name"].underscore, fields_of(input["components"])]
       elsif input["type"] == "enum"
-        [input["name"], "uint8"]
+        [input["name"].underscore, "uint8"]
       else
-        [input["name"], input["type"]]
+        [input["name"].underscore, input["type"]]
       end
     end
   end
@@ -127,7 +127,6 @@ class EventDecoder
 
   def flat_fields(fields, sep: ".")
     fields.map do |name, type|
-      name = name.underscore
       if type.is_a?(::Array)
         flat_fields(type, sep: sep).map do |n, t|
           ["#{name}#{sep}#{n}", t]
@@ -147,7 +146,6 @@ class EventDecoder
   #   ["root", {"message" => ["channel", "index", "fromChainId", "from", "toChainId", "to", "gasLimit", "encoded"]}
   def fields_names(fields)
     fields.map do |name, type|
-      name = name.underscore
       if type.is_a?(::Array)
         { name => fields_names(type) }
       elsif type.is_a?(::String)
@@ -166,7 +164,6 @@ class EventDecoder
   #   ["root", "message_channel", "message_index", "message_fromChainId", "message_from", "message_toChainId", "message_to", "message_gasLimit", "message_encoded"]
   def fields_names_flatten(fields, prefix: nil, sep: ".")
     fields.map do |name, type|
-      name = name.underscore
       if type.is_a?(::Array)
         fields_names_flatten(
           type,
