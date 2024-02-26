@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    abi_coder_rb (0.2.5)
+    abi_coder_rb (0.2.6)
       activesupport
 
 GEM
