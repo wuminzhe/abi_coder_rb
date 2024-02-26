@@ -15,8 +15,11 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = ">= 2.6.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = spec.homepage
-  spec.metadata["bug_tracker_uri"] = "#{spec.homepage}/issues"
+
+  spec.metadata = {
+    "bug_tracker_uri" => "https://github.com/wuminzhe/abi_coder_rb/issues/",
+    "source_code_uri" => "https://github.com/wuminzhe/abi_coder_rb.git"
+  }
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
