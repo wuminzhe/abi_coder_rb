@@ -27,15 +27,14 @@ module AbiCoderRb
   ## rename to lpad32 or such - why? why not?
   # example:
   # lpad("hello", 'x', 10) => "xxxxxxhello"
-  def lpad(bin) ## note: same as builtin String#rjust !!!
-    l = 32 # NOTE: default l word is 32 bytes
+  def lpad(bin, l = 32) ## note: same as builtin String#rjust !!!
     return bin  if bin.size >= l
 
     BYTE_ZERO * (l - bin.size) + bin
   end
 
   ## rename to lpad32_int or such - why? why not?
-  def lpad_int(n)
+  def lpad_int(n, l = 32)
     unless n.is_a?(Integer) && n >= 0 && n <= UINT_MAX
       raise ArgumentError,
             "Integer invalid or out of range: #{n}"
@@ -45,7 +44,7 @@ module AbiCoderRb
     hex = "0#{hex}" if hex.length.odd? # wasm, no .odd?
     bin = hex_to_bin(hex)
 
-    lpad(bin)
+    lpad(bin, l)
   end
 
   ## rename to lpad32_hex or such - why? why not?
@@ -60,6 +59,18 @@ module AbiCoderRb
 
   def ceil32(x)
     x % 32 == 0 ? x : (x + 32 - x % 32)
+  end
+
+  def int_to_abi_signed(value, bits)
+    min = -2**(bits - 1)
+    max = 2**(bits - 1) - 1
+    raise "Value out of range" if value < min || value > max
+
+    value = (1 << bits) + value if value < 0
+
+    hex_str = value.to_s(16)
+
+    hex_str.rjust(bits / 4, "0")
   end
 
   def int_to_abi_signed_256bit(value)
