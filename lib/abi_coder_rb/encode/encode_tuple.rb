@@ -1,6 +1,6 @@
 module AbiCoderRb
   def encode_tuple(tuple, args, packed = false)
-    raise "Tuple with multi inner types not supported in packed mode" if packed && tuple.types.size > 1
+    raise "#{tuple.class} with multi inner types is not supported in packed mode" if packed && tuple.types.size > 1
 
     encode_types(tuple.types, args, packed)
   end

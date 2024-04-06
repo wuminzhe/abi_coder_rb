@@ -22,7 +22,7 @@ module AbiCoderRb
     elsif type.is_a?(Array)
       encode_array(type, value, packed)
     elsif type.is_a?(FixedArray)
-      encode_fixed_array(type, value)
+      encode_fixed_array(type, value, packed)
     else
       encode_primitive_type(type, value, packed)
     end
