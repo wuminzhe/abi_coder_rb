@@ -19,22 +19,18 @@ module AbiCoderRb
     head_size = types.map { |type| type.size || 32 }.sum
 
     # 初始化头部和尾部
-    head = "".b
+    head = "".b # 如果是动态类型，头部是指针；如果是静态类型，头部是数据
     tail = "".b # 使用二进制字符串
 
     # 遍历类型并编码
     types.each_with_index do |type, i|
-      if type.dynamic?
-        if packed
-          head += encode_type(type, args[i], packed)
-        else
-          # 动态类型: 更新头部和尾部
-          head += encode_uint256(head_size + tail.size)
-          tail += encode_type(type, args[i])
-        end
-      else
-        # 静态类型: 只更新头部
+      if !type.dynamic? || packed
+        # 只更新头部，也就是数据
         head += encode_type(type, args[i], packed)
+      else
+        # 动态类型: 更新头部和尾部
+        head += encode_uint256(head_size + tail.size)
+        tail += encode_type(type, args[i])
       end
     end
 

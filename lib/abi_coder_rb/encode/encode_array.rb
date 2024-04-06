@@ -5,14 +5,14 @@ module AbiCoderRb
     head = "".b
     tail = "".b # 使用二进制字符串
 
-    head += encode_uint256(args.size) unless packed
+    head += encode_uint256(args.size) unless packed # 长度
 
     subtype = type.subtype
     args.each do |arg|
       if subtype.dynamic?
         raise "Array with dynamic inner type not supported in packed mode" if packed
 
-        head += encode_uint256(32 * args.size + tail.size)
+        head += encode_uint256(32 * args.size + tail.size) # 当前数据的位置指针
         tail += encode_type(subtype, arg)
       else
         head += encode_type(subtype, arg)
