@@ -86,14 +86,16 @@ RSpec.describe AbiCoderRb do
     # expect(decode(type, data)).to eq value
   end
 
-  # it "(int32,uint64)" do
-  #   type = "(int32,uint64)"
-  #   value = [17, 17]
-  #   data = hex "000000110000000000000011"
-  #
-  #   expect(encode(type, value, true)).to eq data
-  #   # expect(decode(type, data)).to eq value
-  # end
+  it "(int32,uint64)" do
+    type = "(int32,uint64)"
+    value = [17, 17]
+    # data = hex "000000110000000000000011"
+
+    expect do
+      encode(type, value, true)
+    end.to raise_error("AbiCoderRb::Tuple with multi inner types is not supported in packed mode")
+    # expect(decode(type, data)).to eq value
+  end
 
   it "uint16[]" do
     type = "uint16[]"
@@ -125,6 +127,15 @@ RSpec.describe AbiCoderRb do
     data = hex "00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002"
 
     expect(encode(type, value, true)).to eq data
+  end
+
+  it "bytes[2]" do
+    type = "bytes[2]"
+    value = ["dave".b, "dave".b]
+
+    expect do
+      encode(type, value, true)
+    end.to raise_error("AbiCoderRb::FixedArray with dynamic inner type is not supported in packed mode")
   end
 
   it "encodes packed types" do
