@@ -82,6 +82,33 @@ end
 Hello.new.world # => ["Hello World"]
 ```
 
+### Encode packed
+
+```ruby
+# encodePacked
+type = "int64"
+value = 17
+
+encode(type, value, true) # => "0x0000000000000011"
+```
+
+### Encode values one by one
+
+It is similar to `abi.encode(v1, v2, ..)` or `abi.encodePacked(v1, v2, ..)` in solidity.
+
+```ruby
+types = ["int32", "uint64"]
+values = [17, 17]
+
+# abi.encode(v1, v2)
+encode(types, values) # => "0x00000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000011"
+
+# abi.encodePacked(v1, v2)
+encode(types, values, true) # => "0x000000110000000000000011"
+```
+
+
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
