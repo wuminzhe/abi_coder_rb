@@ -12,6 +12,7 @@ Changes compared to original code:
 3. Use string to describe any abi type. This is for compatibility with other abi libs.
 4. Added pre- encoding  and post- decoding callbacks to facilitate transforming data before encoding and after decoding. See [1](https://github.com/wuminzhe/abi_coder_rb/blob/main/spec/transform_before_encode_spec.rb#L4C1-L12C4) [2](https://github.com/wuminzhe/abi_coder_rb/blob/main/spec/web3_js_abitests_spec.rb#L27C1-L49C4)
 5. pass all web3.js tests in [encodeDecodeParams.test.ts](https://github.com/web3/web3.js/blob/c490c1814da646a83c6a5f7fee643e35507c9344/packages/web3-eth-abi/test/unit/encodeDecodeParams.test.ts). That is about 1024 unit tests from fixture [abitestsdata.json](https://github.com/web3/web3.js/blob/c490c1814da646a83c6a5f7fee643e35507c9344/packages/web3-eth-abi/test/fixtures/abitestsdata.json).
+6. support packed encoding similar to `abi.encodePacked`. See [test](./spec/packed_encoding_spec.rb)
 
 Also, some code was modified to compile to wasm. Try it online: https://wuminzhe.github.io/abi.html
 
