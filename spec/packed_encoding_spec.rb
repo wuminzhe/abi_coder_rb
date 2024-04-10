@@ -86,6 +86,7 @@ RSpec.describe AbiCoderRb do
     # expect(decode(type, data)).to eq value
   end
 
+  # abi.encodePacked((var1, var2))
   it "(int32,uint64)" do
     type = "(int32,uint64)"
     value = [17, 17]
@@ -95,6 +96,15 @@ RSpec.describe AbiCoderRb do
       encode(type, value, true)
     end.to raise_error("AbiCoderRb::Tuple with multi inner types is not supported in packed mode")
     # expect(decode(type, data)).to eq value
+  end
+
+  # abi.encodePacked(var1, var2)
+  it "int32,uint64" do
+    types = %w[int32 uint64]
+    values = [17, 17]
+    data = hex "000000110000000000000011"
+
+    expect(encode(types, values, true)).to eq data
   end
 
   it "uint16[]" do

@@ -5,13 +5,25 @@ require_relative "encode/encode_primitive_type"
 
 module AbiCoderRb
   # returns byte array
-  def encode(type, value, packed = false)
-    # puts "encode(#{type}, #{value}, #{packed})"
-    # TODO: more checks?
-    raise EncodingError, "Value can not be nil" if value.nil?
+  def encode(typestr_or_typestrs, value_or_values, packed = false)
+    if typestr_or_typestrs.is_a?(::Array)
+      raise EncodingError, "values should be an array" unless value_or_values.is_a?(::Array)
 
-    parsed = Type.parse(type)
-    encode_type(parsed, value, packed)
+      typestrs = typestr_or_typestrs
+      values = value_or_values
+      typestrs.map.with_index do |typestr, i|
+        value = values[i]
+        encode(typestr, value, packed)
+      end.join
+    else
+      typestr = typestr_or_typestrs
+      value = value_or_values
+      # TODO: more checks?
+      raise EncodingError, "Value can not be nil" if value.nil?
+
+      parsed = Type.parse(typestr)
+      encode_type(parsed, value, packed)
+    end
   end
 
   private
