@@ -5,6 +5,7 @@ module AbiCoderRb
 
     def initialize: (String) -> void
     def next_token: -> String
+    def peek_token: -> String
 
     private
 
