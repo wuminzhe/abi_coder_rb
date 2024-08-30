@@ -17,38 +17,38 @@ module AbiCoderRb
       element =
         case @current_token
         when "uint", "int", "bytes"
-          el = { type: @current_token }
-
-          next_token = @tokenizer.peek_token
-          if next_token =~ /^\d+$/
-            @current_token = @tokenizer.next_token
-            el[:size] = @current_token.to_i
-          else
-            el[:size] = 256 if %w[uint int].include?(@current_token)
-          end
-
-          @current_token = @tokenizer.next_token
-          el
-        when "string"
-          @current_token = @tokenizer.next_token
-          { type: "string" }
-        when "address"
-          @current_token = @tokenizer.next_token
-          { type: "address" }
-        when "bool"
-          @current_token = @tokenizer.next_token
-          { type: "bool" }
+          parse_sizable_type
+        when "string", "address", "bool"
+          parse_simple_type
         when "("
           parse_tuple
         else
           raise "Unexpected token: #{@current_token}"
         end
 
-      if @current_token == "["
-        parse_array(element)
+      @current_token == "[" ? parse_array(element) : element
+    end
+
+    # types like uint8, uint
+    def parse_sizable_type
+      el = { type: @current_token }
+
+      next_token = @tokenizer.peek_token
+      if next_token =~ /^\d+$/
+        @current_token = @tokenizer.next_token
+        el[:size] = @current_token.to_i
       else
-        element
+        el[:size] = 256 if %w[uint int].include?(@current_token)
       end
+
+      @current_token = @tokenizer.next_token
+      el
+    end
+
+    def parse_simple_type
+      type = @current_token
+      @current_token = @tokenizer.next_token
+      { type: type }
     end
 
     def parse_tuple
@@ -66,12 +66,7 @@ module AbiCoderRb
 
     def parse_array(element)
       arr = { type: 'array', inner_type: element, length: parse_array_length }
-
-      if @current_token == "["
-        parse_array(arr)
-      else
-        arr
-      end
+      @current_token == "[" ? parse_array(arr) : arr
     end
 
     def parse_array_length
