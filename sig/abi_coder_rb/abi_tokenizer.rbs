@@ -10,7 +10,6 @@ module AbiCoderRb
     private
 
     def read_identifier: -> String
-
     def skip_whitespace: -> void
   end
 end

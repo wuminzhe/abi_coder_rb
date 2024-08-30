@@ -5,8 +5,8 @@ module AbiCoderRb
   ##      see  https://github.com/rust-ethereum/ethabi/blob/master/ethabi/src/param_type/param_type.rs
 
   class Type
-    def self.parse(type) ## convenience helper
-      Parser.parse(type)
+    def self.parse(str) ## convenience helper
+      Parser.parse(str)
     end
 
     ##

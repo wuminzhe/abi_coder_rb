@@ -6,8 +6,8 @@ module AbiCoderRb
 
     class Parser
       class << self
-        def parse(abi_type_str)
-          abi_type = AbiCoderRb::AbiParser.new(abi_type_str).parse
+        def parse(str)
+          abi_type = AbiCoderRb::AbiParser.new(str).parse
           create_type(abi_type)
         end
 
