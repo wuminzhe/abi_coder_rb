@@ -25,6 +25,7 @@ module AbiCoderRb
         # uint256[] => uint, 256, [-1]
         # bytes => bytes, nil, []
         base, sub, dims = _parse_base_type(type)
+        puts "base: #{base}, sub: #{sub}, dims: #{dims}"
 
         sub ||= 256 if type.start_with?("uint") || type.start_with?("int") # default to 256 if no sub given
         _validate_base_type(base, sub)
