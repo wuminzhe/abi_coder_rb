@@ -12,10 +12,11 @@ require_relative "abi_coder_rb/encode"
 require_relative "periphery/event_decoder"
 
 module AbiCoderRb
-  class DecodingError < StandardError; end
-  class EncodingError < StandardError; end
-  class ValueError < StandardError; end
-  class ValueOutOfBounds < ValueError; end
+  class Error < StandardError; end
+  class DecodingError < Error; end
+  class EncodingError < Error; end
+  class ValueError < Error; end
+  class ValueOutOfBounds < Error; end
 
   BYTE_EMPTY = "".b.freeze
   BYTE_ZERO  = "\x00".b.freeze
