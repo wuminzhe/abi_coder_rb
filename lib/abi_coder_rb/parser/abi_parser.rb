@@ -27,22 +27,19 @@ module AbiCoderRb
 
     # types like uint8, uint
     def parse_suffixable_type
-      el = { type: @current_token }
-
-      next_token = @tokenizer.peek_token
-      if next_token =~ /^\d+$/
-        @current_token = @tokenizer.next_token
-        if el[:type] == "bytes"
-          el[:length] = @current_token.to_i
+      { type: @current_token }.tap do |element|
+        if @tokenizer.peek_token =~ /^\d+$/
+          @current_token = @tokenizer.next_token
+          if element[:type] == "bytes"
+            element[:length] = @current_token.to_i
+          else
+            element[:bits] = @current_token.to_i
+          end
         else
-          el[:bits] = @current_token.to_i
+          element[:bits] = 256 if %w[uint int].include?(@current_token)
         end
-      else
-        el[:bits] = 256 if %w[uint int].include?(@current_token)
+        @current_token = @tokenizer.next_token
       end
-
-      @current_token = @tokenizer.next_token
-      el
     end
 
     def parse_simple_type
