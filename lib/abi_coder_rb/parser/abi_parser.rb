@@ -8,18 +8,12 @@ module AbiCoderRb
     end
 
     def parse
-      parse_element
-    end
-
-    private
-
-    def parse_element
       element =
         case @current_token
-        when "uint", "int", "bytes"
-          parse_sizable_type
         when "string", "address", "bool"
           parse_simple_type
+        when "uint", "int", "bytes"
+          parse_suffixable_type
         when "("
           parse_tuple
         else
@@ -29,16 +23,22 @@ module AbiCoderRb
       @current_token == "[" ? parse_array(element) : element
     end
 
+    private
+
     # types like uint8, uint
-    def parse_sizable_type
+    def parse_suffixable_type
       el = { type: @current_token }
 
       next_token = @tokenizer.peek_token
       if next_token =~ /^\d+$/
         @current_token = @tokenizer.next_token
-        el[:size] = @current_token.to_i
+        if el[:type] == "bytes"
+          el[:length] = @current_token.to_i
+        else
+          el[:bits] = @current_token.to_i
+        end
       else
-        el[:size] = 256 if %w[uint int].include?(@current_token)
+        el[:bits] = 256 if %w[uint int].include?(@current_token)
       end
 
       @current_token = @tokenizer.next_token
@@ -56,7 +56,7 @@ module AbiCoderRb
 
       expect("(")
       until @current_token == ")"
-        inner_types << parse_element
+        inner_types << parse
         expect(",") if @current_token != ")"
       end
       expect(")")
