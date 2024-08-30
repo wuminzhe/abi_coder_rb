@@ -20,7 +20,7 @@ module AbiCoderRb
         when 'tuple' then create_tuple_type(element)
         when 'array' then create_array_type(element)
         else
-          raise "Unknown type: #{element}"
+          raise ParseError, "Unknown type: #{element}"
         end
       end
 

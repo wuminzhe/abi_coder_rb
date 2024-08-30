@@ -17,6 +17,7 @@ module AbiCoderRb
   class EncodingError < Error; end
   class ValueError < Error; end
   class ValueOutOfBounds < Error; end
+  class ParseError < Error; end
 
   BYTE_EMPTY = "".b.freeze
   BYTE_ZERO  = "\x00".b.freeze

@@ -15,7 +15,7 @@ module AbiCoderRb
         when "bytes" then parse_bytes
         when "(" then parse_tuple
         else
-          raise "Unexpected token: #{@current_token}"
+          raise ParseError, "Unexpected token: #{@current_token}"
         end
 
       @current_token == "[" ? parse_array(element) : element
@@ -80,7 +80,7 @@ module AbiCoderRb
         length = @current_token.to_i
         @current_token = @tokenizer.next_token
       else
-        raise "Expected array length or closing ']'"
+        raise ParseError, "Expected array length or closing ']'"
       end
       expect("]")
 
