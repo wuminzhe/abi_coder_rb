@@ -4,8 +4,8 @@ require_relative "abi_coder_rb/version"
 
 require_relative "abi_coder_rb/utils"
 
-require_relative "abi_coder_rb/parser"
-require_relative "abi_coder_rb/types"
+require_relative "abi_coder_rb/type/types"
+require_relative "abi_coder_rb/type/parse"
 require_relative "abi_coder_rb/decode"
 require_relative "abi_coder_rb/encode"
 

@@ -94,7 +94,7 @@ RSpec.describe AbiCoderRb do
 
     expect do
       encode(type, value, true)
-    end.to raise_error("AbiCoderRb::Tuple with multi inner types is not supported in packed mode")
+    end.to raise_error("AbiCoderRb::Tuple with multi inner type is not supported in packed mode")
     # expect(decode(type, data)).to eq value
   end
 
@@ -148,7 +148,7 @@ RSpec.describe AbiCoderRb do
     end.to raise_error("AbiCoderRb::FixedArray with dynamic inner type is not supported in packed mode")
   end
 
-  it "encodes packed types" do
+  it "encodes packed type" do
     expect(
       encode("uint8[]", [1, 2, 3], true)
     ).to eq(
