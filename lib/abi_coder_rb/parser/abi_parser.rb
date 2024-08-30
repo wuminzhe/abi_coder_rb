@@ -10,12 +10,10 @@ module AbiCoderRb
     def parse
       element =
         case @current_token
-        when "string", "address", "bool"
-          parse_simple_type
-        when "uint", "int", "bytes"
-          parse_suffixable_type
-        when "("
-          parse_tuple
+        when "string", "address", "bool" then parse_simple_type
+        when "uint", "int" then parse_numeric_type
+        when "bytes" then parse_bytes
+        when "(" then parse_tuple
         else
           raise "Unexpected token: #{@current_token}"
         end
@@ -25,21 +23,29 @@ module AbiCoderRb
 
     private
 
-    # types like uint8, uint
-    def parse_suffixable_type
-      { type: @current_token }.tap do |element|
+    def parse_bytes
+      result =
         if @tokenizer.peek_token =~ /^\d+$/
           @current_token = @tokenizer.next_token
-          if element[:type] == "bytes"
-            element[:length] = @current_token.to_i
-          else
-            element[:bits] = @current_token.to_i
-          end
+          { type: 'bytes', length: @current_token.to_i }
         else
-          element[:bits] = 256 if %w[uint int].include?(@current_token)
+          { type: 'bytes' }
         end
-        @current_token = @tokenizer.next_token
-      end
+      @current_token = @tokenizer.next_token
+      result
+    end
+
+    def parse_numeric_type
+      type = @current_token
+      result =
+        if @tokenizer.peek_token =~ /^\d+$/
+          @current_token = @tokenizer.next_token
+          { type: type, bits: @current_token.to_i }
+        else
+          { type: type, bits: 256 }
+        end
+      @current_token = @tokenizer.next_token
+      result
     end
 
     def parse_simple_type
