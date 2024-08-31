@@ -6,29 +6,16 @@ module AbiCoderRb
   private
 
   def decode_types(types, data)
-    start_positions = start_positions(types, data)
-
-    types.map.with_index do |type, index|
-      start_position = start_positions[index]
-      decode_type(type, data[start_position..])
-    end
+    start_positions = calculate_start_positions(types, data)
+    types.map.with_index { |type, index| decode_type(type, data[start_positions[index]..]) }
   end
 
-  def start_positions(types, data)
-    start_positions = ::Array.new(types.size)
+  def calculate_start_positions(types, data)
     offset = 0
-
-    types.each_with_index do |type, index|
-      if type.dynamic?
-        # 读取动态类型的偏移量
-        start_positions[index] = decode_uint256(data[offset, 32])
-        offset += 32
-      else
-        start_positions[index] = offset
-        offset += type.size
-      end
+    types.map do |type|
+      position = offset
+      offset += type.dynamic? ? 32 : type.size
+      type.dynamic? ? decode_uint256(data[position, 32]) : position
     end
-
-    start_positions
   end
 end

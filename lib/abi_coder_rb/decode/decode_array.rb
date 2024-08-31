@@ -4,18 +4,15 @@ module AbiCoderRb
     raise DecodingError, "Too many elements: #{size}" if size > 100_000
 
     inner_type = type.inner_type
+    raise DecodingError, "Not enough data for head" if inner_type.dynamic? && data.size < 32 + 32 * size
 
     if inner_type.dynamic?
-      raise DecodingError, "Not enough data for head" unless data.size >= 32 + 32 * size
-
-      start_positions = (1..size).map { |i| 32 + decode_uint256(data[32 * i, 32]) }
-      start_positions.push(data.size)
-
-      outputs = (0...size).map { |i| data[start_positions[i]...start_positions[i + 1]] }
-
-      outputs.map { |out| decode_type(inner_type, out) }
+      start_positions = (1..size).map { |i| 32 + decode_uint256(data[32 * i, 32]) } << data.size
+      outputs = start_positions.each_cons(2).map { |start, stop| data[start...stop] }
     else
-      (0...size).map { |i| decode_type(inner_type, data[(32 + inner_type.size * i)..]) }
+      outputs = (0...size).map { |i| data[(32 + inner_type.size * i)..] }
     end
+
+    outputs.map { |out| decode_type(inner_type, out) }
   end
 end
