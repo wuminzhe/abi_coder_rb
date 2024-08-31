@@ -8,10 +8,10 @@ module AbiCoderRb
   private
 
   def encode_types(types, args, packed = false)
-    raise ArgumentError, "args must be an array" unless args.is_a?(::Array)
+    raise EncodingError, "args must be an array" unless args.is_a?(::Array)
 
     unless args.size == types.size
-      raise ArgumentError,
+      raise EncodingError,
             "Wrong number of args: found #{args.size}, expecting #{types.size}"
     end
 

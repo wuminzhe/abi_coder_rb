@@ -25,7 +25,7 @@ module AbiCoderRb
   end
 
   def encode_uint(arg, bits, packed = false)
-    raise ArgumentError, "arg is not integer: #{arg}" unless arg.is_a?(Integer)
+    raise EncodingError, "arg is not integer: #{arg}" unless arg.is_a?(Integer)
     raise ValueOutOfBounds, arg unless arg >= 0 && arg < 2**bits
 
     if packed
@@ -51,8 +51,7 @@ module AbiCoderRb
   end
 
   def encode_bool(arg, packed = false)
-    ## raise EncodingError or ArgumentError - why? why not?
-    raise ArgumentError, "arg is not bool: #{arg}" unless arg.is_a?(TrueClass) || arg.is_a?(FalseClass)
+    raise EncodingError, "arg is not bool: #{arg}" unless arg.is_a?(TrueClass) || arg.is_a?(FalseClass)
 
     if packed
       arg ? BYTE_ONE : BYTE_ZERO
@@ -62,7 +61,6 @@ module AbiCoderRb
   end
 
   def encode_string(arg, packed = false)
-    ## raise EncodingError or ArgumentError - why? why not?
     raise EncodingError, "Expecting string: #{arg}" unless arg.is_a?(::String)
 
     arg = arg.b if arg.encoding != "BINARY" ## was: name == 'UTF-8', wasm
@@ -79,7 +77,6 @@ module AbiCoderRb
   end
 
   def encode_bytes(arg, length: nil, packed: false)
-    ## raise EncodingError or ArgumentError - why? why not?
     raise EncodingError, "Expecting string: #{arg}" unless arg.is_a?(::String)
 
     arg = arg.b if arg.encoding != Encoding::BINARY

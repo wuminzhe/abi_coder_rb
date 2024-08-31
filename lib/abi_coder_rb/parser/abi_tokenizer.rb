@@ -66,24 +66,3 @@ def _print_tokens(abi)
 
   puts tokens.map { |t| "'#{t}'" }.join(", ")
 end
-
-# abi1 = "bool"
-# abi2 = "string[3]"
-# abi3 = "bytes3"
-# abi4 = "int8"
-# abi5 = " ( (address,  uint256[ 3]),bool[  ] ) "
-#
-# puts "tokenizing abi1: '#{abi1}'"
-# _print_tokens(abi1) # => 'bool'
-#
-# puts "\ntokenizing abi2: '#{abi2}'"
-# _print_tokens(abi2) # => 'string', '[', '3', ']'
-#
-# puts "\ntokenizing abi3: '#{abi3}'"
-# _print_tokens(abi3) # => 'bytes', '3'
-#
-# puts "\ntokenizing abi4: '#{abi4}'"
-# _print_tokens(abi4) # => 'int', '8'
-#
-# puts "\ntokenizing abi5: '#{abi5}'"
-# _print_tokens(abi5) # => '(', '(', 'address', ',', 'uint', '256', '[', '3', ']', ')', ',', 'bool', '[', ']', ')'
