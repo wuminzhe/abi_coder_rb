@@ -55,14 +55,3 @@ module AbiCoderRb
 
   end
 end
-
-def _print_tokens(abi)
-  tokenizer = AbiCoderRb::AbiTokenizer.new(abi)
-
-  tokens = []
-  while token = tokenizer.next_token
-    tokens << token
-  end
-
-  puts tokens.map { |t| "'#{t}'" }.join(", ")
-end
