@@ -1,0 +1,15 @@
+module AbiCoderRb
+  class AbiTokenizer
+    @abi: String
+    @index: Integer
+
+    def initialize: (String) -> void
+    def next_token: -> String
+    def peek_token: -> String
+
+    private
+
+    def read_identifier: -> String
+    def skip_whitespace: -> void
+  end
+end

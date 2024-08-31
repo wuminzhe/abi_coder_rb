@@ -1,0 +1,5 @@
+module AbiCoderRb
+  class Type
+    def self.parse: -> untyped
+  end
+end

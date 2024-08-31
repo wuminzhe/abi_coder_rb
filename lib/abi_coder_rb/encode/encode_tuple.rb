@@ -1,17 +1,17 @@
 module AbiCoderRb
   def encode_tuple(tuple, args, packed = false)
-    raise "#{tuple.class} with multi inner types is not supported in packed mode" if packed && tuple.types.size > 1
+    raise "#{tuple.class} with multi inner type is not supported in packed mode" if packed && tuple.inner_types.size > 1
 
-    encode_types(tuple.types, args, packed)
+    encode_types(tuple.inner_types, args, packed)
   end
 
   private
 
   def encode_types(types, args, packed = false)
-    raise ArgumentError, "args must be an array" unless args.is_a?(::Array)
+    raise EncodingError, "args must be an array" unless args.is_a?(::Array)
 
     unless args.size == types.size
-      raise ArgumentError,
+      raise EncodingError,
             "Wrong number of args: found #{args.size}, expecting #{types.size}"
     end
 
