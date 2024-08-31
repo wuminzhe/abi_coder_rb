@@ -28,11 +28,7 @@ module AbiCoderRb
     raise EncodingError, "arg is not integer: #{arg}" unless arg.is_a?(Integer)
     raise ValueOutOfBounds, arg unless arg >= 0 && arg < 2**bits
 
-    if packed
-      lpad_int(arg, bits / 8)
-    else
-      lpad_int(arg)
-    end
+    packed ? lpad_int(arg, bits / 8) : lpad_int(arg)
   end
 
   def encode_uint256(arg)
@@ -40,8 +36,7 @@ module AbiCoderRb
   end
 
   def encode_int(arg, bits, packed = false)
-    ## raise EncodingError or ArgumentError - why? why not?
-    raise ArgumentError, "arg is not integer: #{arg}" unless arg.is_a?(Integer)
+    raise EncodingError, "arg is not integer: #{arg}" unless arg.is_a?(Integer)
 
     if packed
       hex_to_bin(int_to_abi_signed(arg, bits))
@@ -51,12 +46,12 @@ module AbiCoderRb
   end
 
   def encode_bool(arg, packed = false)
-    raise EncodingError, "arg is not bool: #{arg}" unless arg.is_a?(TrueClass) || arg.is_a?(FalseClass)
+    raise EncodingError, "arg is not bool: #{arg}" unless [TrueClass, FalseClass].include?(arg.class)
 
     if packed
       arg ? BYTE_ONE : BYTE_ZERO
     else
-      lpad(arg ? BYTE_ONE : BYTE_ZERO) ## was  lpad_int( arg ? 1 : 0 )
+      lpad(arg ? BYTE_ONE : BYTE_ZERO)
     end
   end
 
@@ -64,38 +59,22 @@ module AbiCoderRb
     raise EncodingError, "Expecting string: #{arg}" unless arg.is_a?(::String)
 
     arg = arg.b if arg.encoding != "BINARY" ## was: name == 'UTF-8', wasm
-
     raise ValueOutOfBounds, "Integer invalid or out of range: #{arg.size}" if arg.size > UINT_MAX
 
-    if packed
-      arg
-    else
-      size = lpad_int(arg.size)
-      value = rpad(arg, ceil32(arg.size))
-      size + value
-    end
+    packed ? arg : lpad_int(arg.size) + rpad(arg, ceil32(arg.size))
   end
 
   def encode_bytes(arg, length: nil, packed: false)
     raise EncodingError, "Expecting string: #{arg}" unless arg.is_a?(::String)
 
     arg = arg.b if arg.encoding != Encoding::BINARY
-
-    if length # fixed length type
+    if length
       raise ValueOutOfBounds, "invalid bytes length #{arg.size}, should be #{length}" if arg.size > length
       raise ValueOutOfBounds, "invalid bytes length #{length}" if length < 0 || length > 32
-
       packed ? arg : rpad(arg)
-    else # variable length type  (if length is nil)
+    else
       raise ValueOutOfBounds, "Integer invalid or out of range: #{arg.size}" if arg.size > UINT_MAX
-
-      if packed
-        arg
-      else
-        size =  lpad_int(arg.size)
-        value = rpad(arg, ceil32(arg.size))
-        size + value
-      end
+      packed ? arg : lpad_int(arg.size) + rpad(arg, ceil32(arg.size))
     end
   end
 
@@ -103,14 +82,14 @@ module AbiCoderRb
     if arg.is_a?(Integer)
       packed ? lpad_int(arg, 20) : lpad_int(arg)
     elsif arg.is_a?(::String)
-      if arg.size == 20
-        ## note: make sure encoding is always binary!!!
-        arg = arg.b if arg.encoding != Encoding::BINARY
+      arg = arg.b if arg.encoding != Encoding::BINARY
+      case arg.size
+      when 20
         packed ? arg : lpad(arg)
-      elsif arg.size == 40
+      when 40
         packed ? hex_to_bin(arg) : lpad_hex(arg)
-      elsif arg.size == 42 && arg[0, 2] == "0x" ## todo/fix: allow 0X too - why? why not?
-        arg = arg[2..-1] ## cut-off leading 0x
+      when 42
+        arg = arg[2..-1]
         packed ? hex_to_bin(arg) : lpad_hex(arg)
       else
         raise EncodingError, "Could not parse address: #{arg}"
