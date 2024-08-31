@@ -4,7 +4,7 @@ This is a ruby implementation of the Ethereum ABI codec. It passes all the codec
 
 ## Why I write this gem
 
-Originally, I just wanted to gain a deeper understanding of the Ethereum ABI codec by studying this [code](https://github.com/rubycocos/blockchain/blob/master/abicoder). 
+Originally, I just wanted to gain a deeper understanding of the Ethereum ABI codec by studying this [code](https://github.com/rubycocos/blockchain/tree/8885cc1f6e3ff5c3f1a42809499b1641aa78f171/abicoder). 
 
 When I read the code, I found that the code is not easy to read and understand. So I decided to rewrite it. This gem is the result.
 
