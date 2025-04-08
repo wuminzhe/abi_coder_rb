@@ -202,5 +202,21 @@ RSpec.describe AbiCoderRb do
     expect(
       encode("int128", 17, true)
     ).to eq hex("00000000000000000000000000000011")
+
+    transactions = [
+      { operation: 0, to: "0xa89005ab7d7fd81A94c8A8e0799648248CeE6934", value: 1, data: "".b },
+      { operation: 0, to: "0xc1b5bcbc94e6127ac3ee4054d0664e4f6afe45d3", value: 1, data: "".b }
+    ]
+    result = transactions.map do |tx|
+      encode(
+        %w[uint8 address uint256 uint256 bytes],
+        [tx[:operation], tx[:to], tx[:value], tx[:data].length, tx[:data]],
+        true
+      )
+    end.join
+
+    expect(result).to eq(
+      hex("00a89005ab7d7fd81a94c8a8e0799648248cee69340000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000c1b5bcbc94e6127ac3ee4054d0664e4f6afe45d300000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000")
+    )
   end
 end
